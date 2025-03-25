@@ -1,47 +1,67 @@
-<script setup>
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
-</script>
-
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
+  <v-app>
+    <v-layout>
+      <!-- App Bar -->
+      <v-app-bar color="primary" dark>
+        <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
+        <v-avatar color="white" size="32" class="mr-4 ml-2">
+          <v-icon color="primary">mdi-link-variant</v-icon>
+        </v-avatar>
+        <v-app-bar-title>IPCOM Attachment Expiry System</v-app-bar-title>
+        <v-spacer></v-spacer>
+        <div>{{ currentDate }}</div>
+      </v-app-bar>
 
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-    </div>
-  </header>
+      <!-- Navigation Drawer -->
+      <v-navigation-drawer v-model="drawer" app>
+        <v-list-subheader>NAVIGATIE</v-list-subheader>
+        <v-list density="compact" nav>
+          <v-list-item
+              v-for="(item, i) in navigationItems"
+              :key="i"
+              :value="item.value"
+              :to="item.to"
+              :active="currentRoute === item.to"
+              @click="currentRoute = item.to"
+          >
+            <template v-slot:prepend>
+              <v-icon :icon="item.icon"></v-icon>
+            </template>
+            <v-list-item-title>{{ item.title }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-navigation-drawer>
 
-  <main>
-    <TheWelcome />
-  </main>
+      <!-- Main Content -->
+      <v-main>
+        <router-view />
+      </v-main>
+    </v-layout>
+  </v-app>
 </template>
 
-<style scoped>
-header {
-  line-height: 1.5;
-}
+<script setup>
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
+const router = useRouter();
+const drawer = ref(false);
+const currentRoute = ref('/dashboard');
 
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
+const navigationItems = [
+  { title: 'Dashboard', icon: 'mdi-view-dashboard', to: '/dashboard', value: 'dashboard' },
+  { title: 'Producten', icon: 'mdi-package-variant-closed', to: '/products', value: 'products' },
+  { title: 'Attachments', icon: 'mdi-attachment', to: '/attachments', value: 'attachments' },
+  { title: 'Rapportages', icon: 'mdi-chart-box', to: '/reports', value: 'reports' },
+  { title: 'Instellingen', icon: 'mdi-cog', to: '/settings', value: 'settings' }
+];
 
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-}
-</style>
+const currentDate = computed(() => {
+  const date = new Date();
+  return date.toLocaleDateString('nl-NL', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+});
+</script>
