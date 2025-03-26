@@ -43,7 +43,7 @@
 
       <!-- Language column -->
       <template v-slot:item.languageCode="{ item }">
-        <v-chip size="small" color="grey-lighten-3">
+        <v-chip size="small" color="grey-lighten-1">
           {{ item.languageCode }}
         </v-chip>
       </template>
@@ -91,7 +91,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, inject } from 'vue';
 import { AttachmentService } from '../services/attachmentService';
 
 // Props definition
@@ -100,34 +100,29 @@ const props = defineProps({
     type: String,
     default: 'Attachments'
   },
-  searchQuery: {
+  loading: {
+    type: Boolean,
+    default: false
+  },
+  error: {
     type: String,
-    default: ''
-  },
-  productFilter: {
-    type: Object,
     default: null
-  },
-  dateRange: {
-    type: Array,
-    default: () => []
   }
 });
 
-// State variables
-const loading = ref(true);
-const error = ref(null);
-const attachments = ref([]);
-const pagination = ref({
+// Use shared state from parent component
+const attachments = inject('attachments', ref({ $values: [] }));
+const pagination = inject('pagination', ref({
   currentPage: 1,
   pageSize: 10,
   totalItems: 0,
   totalPages: 0
-});
-const filters = ref([]);
+}));
+const activeFilters = inject('activeFilters', ref({}));
+const fetchAttachments = inject('fetchAttachments', () => console.warn('fetchAttachments not provided'));
 
-// Create instance of attachment service
-const attachmentService = new AttachmentService();
+// Emits
+const emit = defineEmits(['page-changed']);
 
 // Table headers
 const headers = [
@@ -165,13 +160,13 @@ const processedAttachments = computed(() => {
         status = 'Verlopen';
         statusLevel = 0;
       } else if (daysToExpiry <= 7) {
-        status = `Vervalt binnen ${daysToExpiry}`;
+        status = `Vervalt binnen ${daysToExpiry} dagen`;
         statusLevel = 1;
       } else if (daysToExpiry <= 14) {
-        status = `Vervalt binnen ${daysToExpiry}`;
+        status = `Vervalt binnen ${daysToExpiry} dagen`;
         statusLevel = 2;
       } else if (daysToExpiry <= 30) {
-        status = `Vervalt binnen ${daysToExpiry}`;
+        status = `Vervalt binnen ${daysToExpiry} dagen`;
         statusLevel = 3;
       }
     }
@@ -185,50 +180,10 @@ const processedAttachments = computed(() => {
   }) || [];
 });
 
-// Methods
-const fetchAttachments = async () => {
-  try {
-    loading.value = true;
-
-    // Prepare filter parameters
-    const filterParams = {
-      ...filters.value.reduce((acc, filter) => ({
-        ...acc,
-        [filter.column]: filter.value
-      }), {}),
-    };
-
-
-    // Call the service to get data
-    const response = await attachmentService.getAllAttachements(
-        filterParams,
-        pagination.value.currentPage,
-        pagination.value.pageSize
-    );
-
-    // Update attachments with the response data
-    attachments.value = response.data;
-
-    // Update pagination state
-    pagination.value = {
-      currentPage: response.pageNumber,
-      pageSize: response.pageSize,
-      totalItems: response.totalRecords,
-      totalPages: response.totalPages
-    };
-
-    error.value = null;
-  } catch (err) {
-    error.value = `Error loading attachments: ${err.message}`;
-    attachments.value = { $values: [] };
-  } finally {
-    loading.value = false;
-  }
-};
-
 const changePage = (newPage) => {
   pagination.value.currentPage = newPage;
   fetchAttachments();
+  emit('page-changed', newPage);
 };
 
 // Utility methods
@@ -285,25 +240,4 @@ const formatFileSize = (bytes) => {
 
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
-
-// Watch for prop changes
-watch(() => props.searchQuery, (newValue) => {
-  search.value = newValue;
-  pagination.value.currentPage = 1; // Reset to first page when search changes
-  fetchAttachments();
-});
-
-watch(() => props.productFilter, () => {
-  pagination.value.currentPage = 1;
-  fetchAttachments();
-}, { deep: true });
-
-watch(() => props.dateRange, () => {
-  pagination.value.currentPage = 1;
-  fetchAttachments();
-}, { deep: true });
-
-onMounted(() => {
-  fetchAttachments();
-});
 </script>

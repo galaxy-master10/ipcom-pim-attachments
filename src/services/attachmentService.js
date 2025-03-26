@@ -6,14 +6,32 @@ export class AttachmentService {
             pageNumber = Number(pageNumber);
             pageSize = Number(pageSize);
 
+            // Convert date strings to proper format for the API if they exist
+            const formattedFilters = { ...filters };
+
+            if (formattedFilters.expiryDateFrom) {
+                formattedFilters.expiryDateFrom = new Date(formattedFilters.expiryDateFrom).toISOString().split('T')[0];
+            }
+
+            if (formattedFilters.expiryDateTo) {
+                formattedFilters.expiryDateTo = new Date(formattedFilters.expiryDateTo).toISOString().split('T')[0];
+            }
+
             // Clean up the filters object by removing empty values
             const cleanFilters = {};
-            Object.keys(filters).forEach(key => {
-                const value = filters[key];
+            Object.keys(formattedFilters).forEach(key => {
+                const value = formattedFilters[key];
                 if (value !== null && value !== undefined && value !== '') {
-                    cleanFilters[key] = value;
+                    // Make sure boolean values are passed properly
+                    if (typeof value === 'boolean') {
+                        cleanFilters[key] = value;
+                    } else {
+                        cleanFilters[key] = value;
+                    }
                 }
             });
+
+            console.log('Sending filters to API:', cleanFilters);
 
             const response = await attachmentEndpointApi.getAll(cleanFilters, pageNumber, pageSize);
             return {
