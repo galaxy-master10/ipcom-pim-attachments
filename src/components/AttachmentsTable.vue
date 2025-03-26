@@ -125,7 +125,6 @@ const pagination = ref({
   totalPages: 0
 });
 const filters = ref([]);
-const search = ref(props.searchQuery);
 
 // Create instance of attachment service
 const attachmentService = new AttachmentService();
@@ -197,19 +196,8 @@ const fetchAttachments = async () => {
         ...acc,
         [filter.column]: filter.value
       }), {}),
-      search: search.value
     };
 
-    // If product filter is provided, add it to the filter params
-    if (props.productFilter) {
-      filterParams.productId = props.productFilter.id;
-    }
-
-    // If date range is provided, add it to filter params
-    if (props.dateRange && props.dateRange.length === 2) {
-      filterParams.startDate = props.dateRange[0];
-      filterParams.endDate = props.dateRange[1];
-    }
 
     // Call the service to get data
     const response = await attachmentService.getAllAttachements(

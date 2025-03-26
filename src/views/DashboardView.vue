@@ -1,57 +1,10 @@
 <template>
   <v-container>
     <!-- Filter Options Section -->
-    <v-card class="mb-6">
-      <v-card-title>Filter opties</v-card-title>
-      <v-card-text>
-        <v-row>
-          <v-col cols="12" sm="4">
-            <v-select
-                v-model="selectedProduct"
-                :items="products"
-                label="Product selecteren"
-                item-title="name"
-                item-value="id"
-                variant="outlined"
-                hide-details
-            ></v-select>
-          </v-col>
-          <v-col cols="12" sm="4">
-            <v-menu
-                v-model="dateMenu"
-                :close-on-content-click="false"
-                transition="scale-transition"
-                min-width="auto"
-            >
-              <template v-slot:activator="{ props }">
-                <v-text-field
-                    v-bind="props"
-                    v-model="dateRangeText"
-                    label="Datumbereik"
-                    readonly
-                    variant="outlined"
-                    hide-details
-                ></v-text-field>
-              </template>
-              <v-date-picker
-                  v-model="dateRange"
-                  range
-                  @update:model-value="dateMenu = false"
-              ></v-date-picker>
-            </v-menu>
-          </v-col>
-          <v-col cols="12" sm="4">
-            <v-text-field
-                v-model="search"
-                label="Zoeken..."
-                prepend-inner-icon="mdi-magnify"
-                variant="outlined"
-                hide-details
-            ></v-text-field>
-          </v-col>
-        </v-row>
-      </v-card-text>
-    </v-card>
+    <SimpleFilterPanel
+        @filter-changed="onFilterChanged"
+        @reset-filters="onFilterReset"
+    />
 
     <!-- Statistics Cards -->
     <v-row>
@@ -82,16 +35,11 @@
     </v-row>
 
     <!-- Attachments Table -->
-    <AttachmentsTable :attachments="filteredAttachments" title="Vervallende Attachments" />
-
-    <!-- Pagination -->
-    <div class="d-flex justify-center mt-4">
-      <v-pagination
-          v-model="page"
-          :length="totalPages"
-          :total-visible="5"
-      ></v-pagination>
-    </div>
+    <AttachmentsTable
+        title="Vervallende Attachments"
+        :loading="loading"
+        :error="error"
+    />
   </v-container>
 </template>
 
@@ -99,131 +47,114 @@
 import { ref, computed, onMounted } from 'vue';
 import AttachmentStatCard from '@/components/AttachmentStatCard.vue';
 import AttachmentsTable from '@/components/AttachmentsTable.vue';
+import { AttachmentService } from "@/services/attachmentService.js";
+import SimpleFilterPanel from "@/components/SimpleFilterPanel.vue";
 
 // State
-const selectedProduct = ref(null);
-const dateMenu = ref(false);
-const dateRange = ref([]);
-const search = ref('');
-const page = ref(1);
-const itemsPerPage = ref(10);
+const attachments = ref({ $values: [] });
+const loading = ref(false);
+const error = ref(null);
+const activeFilters = ref({});
 
-// Mock data
-const products = ref([
-  { id: 'a', name: 'Product A' },
-  { id: 'b', name: 'Product B' },
-  { id: 'c', name: 'Product C' },
-]);
-
-const attachments = ref([
-  {
-    id: 1,
-    name: 'Veiligheidsblad.pdf',
-    product: 'Product C',
-    expiryDate: '2025-03-28',
-    status: 'Vervalt binnen 1',
-    statusLevel: 1
-  },
-  {
-    id: 2,
-    name: 'Specificaties.xlsx',
-    product: 'Product A',
-    expiryDate: '2025-04-07',
-    status: 'Vervalt binnen 2',
-    statusLevel: 2
-  },
-  {
-    id: 3,
-    name: 'Certificaat.docx',
-    product: 'Product B',
-    expiryDate: '2025-04-14',
-    status: 'Vervalt binnen 3',
-    statusLevel: 3
-  },
-  {
-    id: 4,
-    name: 'Handleiding.pdf',
-    product: 'Product A',
-    expiryDate: '2025-04-21',
-    status: 'Vervalt binnen 4',
-    statusLevel: 4
-  },
-]);
-
-// Computed values
-const dateRangeText = computed(() => {
-  return dateRange.value.length > 0
-      ? `${dateRange.value[0]} - ${dateRange.value[1] || dateRange.value[0]}`
-      : '';
+const pagination = ref({
+  currentPage: 1,
+  pageSize: 10,
+  totalItems: 0,
+  totalPages: 0
 });
 
+const attachmentService = new AttachmentService();
+
+// Computed
 const expiringSoon = computed(() => {
-  const now = new Date();
-  const nextWeek = new Date();
-  nextWeek.setDate(now.getDate() + 7);
-
-  const count = attachments.value.filter(a => {
-    const expiryDate = new Date(a.expiryDate);
-    return expiryDate <= nextWeek && expiryDate >= now;
-  }).length;
-
-  return { count };
+  return {
+    count: countAttachmentsExpiringWithinDays(7)
+  };
 });
 
 const expiringThisMonth = computed(() => {
-  const now = new Date();
-  const nextMonth = new Date();
-  nextMonth.setDate(now.getDate() + 30);
-
-  const count = attachments.value.filter(a => {
-    const expiryDate = new Date(a.expiryDate);
-    return expiryDate <= nextMonth && expiryDate >= now;
-  }).length;
-
-  return { count };
+  return {
+    count: countAttachmentsExpiringWithinDays(30)
+  };
 });
 
 const totalAttachments = computed(() => {
-  return { count: attachments.value.length };
+  return {
+    count: (attachments.value.$values || []).length
+  };
 });
 
-const filteredAttachments = computed(() => {
-  let filtered = [...attachments.value];
+// Methods
+function countAttachmentsExpiringWithinDays(days) {
+  if (!attachments.value.$values) return 0;
 
-  if (selectedProduct.value) {
-    filtered = filtered.filter(a => a.product === selectedProduct.value.name);
-  }
+  const today = new Date();
+  const futureDate = new Date();
+  futureDate.setDate(today.getDate() + days);
 
-  if (dateRange.value.length === 2) {
-    const startDate = new Date(dateRange.value[0]);
-    const endDate = new Date(dateRange.value[1]);
-    filtered = filtered.filter(a => {
-      const expiryDate = new Date(a.expiryDate);
-      return expiryDate >= startDate && expiryDate <= endDate;
-    });
-  }
+  return attachments.value.$values.filter(attachment => {
+    if (!attachment.expiryDate) return false;
+    const expiryDate = new Date(attachment.expiryDate);
+    return expiryDate <= futureDate && expiryDate >= today;
+  }).length;
+}
 
-  if (search.value) {
-    const searchLower = search.value.toLowerCase();
-    filtered = filtered.filter(a =>
-        a.name.toLowerCase().includes(searchLower) ||
-        a.product.toLowerCase().includes(searchLower)
+const fetchAttachments = async () => {
+  try {
+    loading.value = true;
+    error.value = null;
+
+    const response = await attachmentService.getAllAttachements(
+        activeFilters.value,
+        pagination.value.currentPage,
+        pagination.value.pageSize
     );
+
+    // Add daysUntilExpiry property to each attachment
+    const today = new Date();
+    if (response.data && response.data.$values) {
+      response.data.$values = response.data.$values.map(attachment => {
+        let daysUntilExpiry = null;
+        if (attachment.expiryDate) {
+          const expiryDate = new Date(attachment.expiryDate);
+          daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+        }
+        return { ...attachment, daysUntilExpiry };
+      });
+    }
+
+    attachments.value = response.data;
+
+    // Update pagination
+    pagination.value = {
+      currentPage: response.pageNumber,
+      pageSize: response.pageSize,
+      totalItems: response.totalRecords,
+      totalPages: response.totalPages
+    };
+  } catch (err) {
+    console.error('Error fetching attachments:', err);
+    error.value = `Error loading attachments: ${err.message}`;
+    attachments.value = { $values: [] };
+  } finally {
+    loading.value = false;
   }
+};
 
-  // Pagination
-  const start = (page.value - 1) * itemsPerPage.value;
-  const end = start + itemsPerPage.value;
-  return filtered.slice(start, end);
-});
+const onFilterChanged = (filters) => {
+  activeFilters.value = filters;
+  pagination.value.currentPage = 1;
+  fetchAttachments();
+};
 
-const totalPages = computed(() => {
-  return Math.ceil(attachments.value.length / itemsPerPage.value);
-});
+const onFilterReset = () => {
+  activeFilters.value = {};
+  pagination.value.currentPage = 1;
+  fetchAttachments();
+};
 
 // Lifecycle
 onMounted(() => {
-  // Here you would typically fetch data from an API
-  console.log('Dashboard component mounted');
+  fetchAttachments();
 });
 </script>
