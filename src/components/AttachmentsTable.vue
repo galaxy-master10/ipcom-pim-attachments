@@ -71,7 +71,7 @@
 
     <!-- Pagination with page size options -->
     <div class="d-flex justify-space-between align-center px-4 py-3">
-      <!-- Page size selector -->
+      <!-- Page size selector on the left -->
       <div class="d-flex align-center">
         <span class="text-body-2 mr-2">Rijen per pagina:</span>
         <v-select
@@ -81,30 +81,28 @@
             density="compact"
             class="page-size-select"
             hide-details
+            style="max-width: 120px;"
             @update:model-value="changePageSize"
         ></v-select>
       </div>
-    </div>
-
-    <!-- Pagination -->
-    <div class="d-flex justify-center align-center pa-4">
-      <v-btn
-          icon="mdi-chevron-left"
-          variant="text"
-          :disabled="pagination.currentPage <= 1"
-          @click="changePage(pagination.currentPage - 1)"
-      ></v-btn>
-
-      <span class="mx-4">
-        Pagina {{ pagination.currentPage }} van {{ pagination.totalPages }}
-      </span>
-
-      <v-btn
-          icon="mdi-chevron-right"
-          variant="text"
-          :disabled="pagination.currentPage >= pagination.totalPages"
-          @click="changePage(pagination.currentPage + 1)"
-      ></v-btn>
+      <!-- Pagination controls on the right -->
+      <div class="d-flex align-center">
+        <v-btn
+            icon="mdi-chevron-left"
+            variant="text"
+            :disabled="pagination.currentPage <= 1"
+            @click="changePage(pagination.currentPage - 1)"
+        />
+        <span class="mx-4">
+      Pagina {{ pagination.currentPage }} van {{ pagination.totalPages }}
+    </span>
+        <v-btn
+            icon="mdi-chevron-right"
+            variant="text"
+            :disabled="pagination.currentPage >= pagination.totalPages"
+            @click="changePage(pagination.currentPage + 1)"
+        />
+      </div>
     </div>
   </v-card>
 </template>
