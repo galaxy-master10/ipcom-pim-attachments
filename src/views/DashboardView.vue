@@ -40,6 +40,8 @@
         title="Vervallende Attachments"
         :loading="loading"
         :error="error"
+        @page-changed="onPageChanged"
+        @page-size-changed="onPageSizeChanged"
     />
   </v-container>
 </template>
@@ -168,6 +170,22 @@ const onFilterReset = () => {
   activeFilters.value = {};
   pagination.value.currentPage = 1;
   fetchAttachments();
+};
+
+// Handle page change event from AttachmentsTable
+const onPageChanged = (page) => {
+  console.log('Page changed to:', page);
+  pagination.value.currentPage = page;
+  // fetchAttachments is already called within the AttachmentsTable component
+};
+
+
+
+const onPageSizeChanged = (size) => {
+  console.log('Page size changed to:', size);
+  pagination.value.pageSize = size;
+  pagination.value.currentPage = 1; // Reset to first page
+  // fetchAttachments is already called within the AttachmentsTable component
 };
 
 // Lifecycle

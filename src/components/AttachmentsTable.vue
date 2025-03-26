@@ -19,6 +19,8 @@
         v-else
         :headers="headers"
         :items="processedAttachments"
+        :items-per-page="pagination.pageSize"
+        :page="pagination.currentPage"
         class="elevation-0"
         hide-default-footer
     >
@@ -66,6 +68,23 @@
         </v-icon>
       </template>
     </v-data-table>
+
+    <!-- Pagination with page size options -->
+    <div class="d-flex justify-space-between align-center px-4 py-3">
+      <!-- Page size selector -->
+      <div class="d-flex align-center">
+        <span class="text-body-2 mr-2">Rijen per pagina:</span>
+        <v-select
+            v-model="pagination.pageSize"
+            :items="pageSizeOptions"
+            variant="outlined"
+            density="compact"
+            class="page-size-select"
+            hide-details
+            @update:model-value="changePageSize"
+        ></v-select>
+      </div>
+    </div>
 
     <!-- Pagination -->
     <div class="d-flex justify-center align-center pa-4">
@@ -118,9 +137,10 @@ const pagination = inject('pagination', ref({
   totalItems: 0,
   totalPages: 0
 }));
+
 const activeFilters = inject('activeFilters', ref({}));
 const fetchAttachments = inject('fetchAttachments', () => console.warn('fetchAttachments not provided'));
-
+const pageSizeOptions = [10, 25, 50, 75, 100];
 // Emits
 const emit = defineEmits(['page-changed']);
 
@@ -184,6 +204,14 @@ const changePage = (newPage) => {
   pagination.value.currentPage = newPage;
   fetchAttachments();
   emit('page-changed', newPage);
+};
+// Change the number of items per page
+const changePageSize = (newSize) => {
+  // Reset to page 1 when changing page size to avoid empty results
+  pagination.value.currentPage = 1;
+  pagination.value.pageSize = newSize;
+  fetchAttachments();
+  emit('page-size-changed', newSize);
 };
 
 // Utility methods
