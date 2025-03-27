@@ -19,7 +19,6 @@
         :headers="headers"
         :items="processedAttachments"
         :items-per-page="pagination.pageSize"
-
         disable-pagination
         class="elevation-0"
         hide-default-footer
@@ -103,8 +102,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, inject } from 'vue';
-
+import { ref, computed, inject } from 'vue';
+import {getFileIcon} from "@/utilities/utilities.js";
+import {getStatusColor} from "@/utilities/utilities.js";
+import {formatFileSize} from "@/utilities/utilities.js";
 
 const props = defineProps({
   title: {
@@ -152,17 +153,15 @@ const headers = [
 
 
 const processedAttachments = computed(() => {
-  // Map received attachments to include the derived product name and status
+
   return attachments.value.$values?.map(attachment => {
-    // Find product name, defaulting to 'Unknown' if null or not found
     const product = attachment.products && attachment.products.$values && attachment.products.$values.length > 0
         ? (attachment.products.$values[0].name || 'Unknown')
         : 'Unknown';
 
-    // Calculate status level and message based on expiry date
-    let status = 'Active';
-    let statusLevel = 4; // Default to success/green
 
+    let status = 'Active';
+    let statusLevel = 4;
     if (attachment.expiryDate) {
       const expiryDate = new Date(attachment.expiryDate);
       const today = new Date();
@@ -205,58 +204,4 @@ const changePageSize = (newSize) => {
   emit('page-size-changed', newSize);
 };
 
-
-const getFileIcon = (filename) => {
-  if (!filename) return 'mdi-file-question-outline';
-
-  const extension = filename.split('.').pop().toLowerCase();
-
-  switch (extension) {
-    case 'pdf':
-      return 'mdi-file-pdf-box';
-    case 'docx':
-    case 'doc':
-      return 'mdi-file-word-box';
-    case 'xlsx':
-    case 'xls':
-      return 'mdi-file-excel-box';
-    case 'pptx':
-    case 'ppt':
-      return 'mdi-file-powerpoint-box';
-    case 'jpg':
-    case 'jpeg':
-    case 'png':
-      return 'mdi-file-image-box';
-    default:
-      return 'mdi-file-document-outline';
-  }
-};
-
-const getStatusColor = (level) => {
-  switch (level) {
-    case 0:
-      return 'grey';
-    case 1:
-      return 'error';
-    case 2:
-      return 'deep-orange';
-    case 3:
-      return 'amber-darken-2';
-    case 4:
-      return 'success';
-    default:
-      return 'grey';
-  }
-};
-
-const formatFileSize = (bytes) => {
-  if (!bytes && bytes !== 0) return '';
-  if (bytes === 0) return '0 Bytes';
-
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
 </script>

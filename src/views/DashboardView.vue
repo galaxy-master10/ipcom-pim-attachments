@@ -49,6 +49,8 @@ import AttachmentStatCard from '@/components/AttachmentStatCard.vue';
 import AttachmentsTable from '@/components/AttachmentsTable.vue';
 import { AttachmentService } from "@/services/attachmentService.js";
 import AttachmentsFilter from "@/components/AttachmentsFilter.vue";
+import { countAttachmentsExpiringWithinDays } from '../utilities/utilities.js';
+
 
 
 const attachments = ref({ $values: [] });
@@ -73,13 +75,13 @@ const attachmentService = new AttachmentService();
 
 const expiringSoon = computed(() => {
   return {
-    count: countAttachmentsExpiringWithinDays(7)
+    count: countAttachmentsExpiringWithinDays(30, attachments)
   };
 });
 
 const expiringThisMonth = computed(() => {
   return {
-    count: countAttachmentsExpiringWithinDays(30)
+    count: countAttachmentsExpiringWithinDays(30, attachments)
   };
 });
 
@@ -90,27 +92,10 @@ const totalAttachments = computed(() => {
 });
 
 
-function countAttachmentsExpiringWithinDays(days) {
-  if (!attachments.value.$values) return 0;
-
-  const today = new Date();
-  const futureDate = new Date();
-  futureDate.setDate(today.getDate() + days);
-
-  return attachments.value.$values.filter(attachment => {
-    if (!attachment.expiryDate) return false;
-    const expiryDate = new Date(attachment.expiryDate);
-    return expiryDate <= futureDate && expiryDate >= today;
-  }).length;
-}
-
 const fetchAttachments = async () => {
   try {
     loading.value = true;
     error.value = null;
-
-    console.log('Fetching attachments with filters:', activeFilters.value);
-    console.log('Current page:', pagination.value.currentPage);
 
     const response = await attachmentService.getAllAttachements(
         activeFilters.value,
@@ -141,8 +126,6 @@ const fetchAttachments = async () => {
       totalPages: response.totalPages || 0
     };
 
-    console.log('Fetched attachments:', attachments.value.$values?.length || 0);
-    console.log('Updated pagination:', pagination.value);
   } catch (err) {
     console.error('Error fetching attachments:', err);
     error.value = `Error loading attachments: ${err.message}`;
