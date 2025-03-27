@@ -16,7 +16,6 @@
       <div v-if="isExpanded">
         <v-card-text class="py-4">
           <v-row>
-            <!-- Filter by Name -->
             <v-col cols="12" sm="6" md="4">
               <v-text-field
                   v-model="filters.name"
@@ -28,7 +27,6 @@
                   clearable
               ></v-text-field>
             </v-col>
-            <!-- Filter by ID -->
             <v-col cols="12" sm="6" md="4">
               <v-text-field
                   v-model="filters.id"
@@ -40,7 +38,6 @@
                   clearable
               ></v-text-field>
             </v-col>
-            <!-- Filter by Product -->
             <v-col cols="12" sm="6" md="4">
               <v-text-field
                   v-model="filters.product"
@@ -52,7 +49,6 @@
                   clearable
               ></v-text-field>
             </v-col>
-            <!-- Filter by Language Code -->
             <v-col cols="12" sm="6" md="4">
               <v-text-field
                   v-model="filters.languageCode"
@@ -64,7 +60,6 @@
                   clearable
               ></v-text-field>
             </v-col>
-            <!-- Filter by Index -->
             <v-col cols="12" sm="6" md="4">
               <v-text-field
                   v-model.number="filters.index"
@@ -77,7 +72,6 @@
                   clearable
               ></v-text-field>
             </v-col>
-            <!-- Filter by Published -->
             <v-col cols="12" sm="6" md="4">
               <v-select
                   v-model="filters.published"
@@ -90,7 +84,6 @@
                   clearable
               ></v-select>
             </v-col>
-            <!-- Filter by NoResize -->
             <v-col cols="12" sm="6" md="4">
               <v-select
                   v-model="filters.noResize"
@@ -103,7 +96,6 @@
                   clearable
               ></v-select>
             </v-col>
-            <!-- Filter by Expiry Date Range -->
             <v-col cols="12" sm="6" md="4">
               <v-text-field
                   v-model="filters.expiryDateFrom"
@@ -149,7 +141,6 @@ import { ref, reactive, watch } from 'vue';
 
 const emit = defineEmits(['filter-changed', 'reset-filters']);
 
-// Accept initial filters state from parent
 const props = defineProps({
   initialFilters: {
     type: Object,
@@ -157,10 +148,10 @@ const props = defineProps({
   }
 });
 
-// Control expansion state
+
 const isExpanded = ref(true);
 
-// Create reactive filter object
+
 const filters = reactive({
   id: '',
   name: '',
@@ -173,13 +164,12 @@ const filters = reactive({
   expiryDateTo: ''
 });
 
-// Boolean options for dropdowns
+
 const booleanOptions = [
   { title: 'Ja', value: true },
   { title: 'Nee', value: false }
 ];
 
-// Initialize filters from props if available
 watch(() => props.initialFilters, (newFilters) => {
   if (newFilters) {
     Object.keys(newFilters).forEach(key => {
@@ -190,9 +180,9 @@ watch(() => props.initialFilters, (newFilters) => {
   }
 }, { immediate: true, deep: true });
 
-// Apply filters
+
 const applyFilters = () => {
-  // Create a new object with only non-empty values
+
   const activeFilters = {};
 
   Object.entries(filters).forEach(([key, value]) => {
@@ -204,9 +194,7 @@ const applyFilters = () => {
   emit('filter-changed', activeFilters);
 };
 
-// Reset all filters
 const resetFilters = () => {
-  // Reset all filter values to empty or null
   Object.keys(filters).forEach(key => {
     if (typeof filters[key] === 'boolean' || filters[key] === true || filters[key] === false) {
       filters[key] = null;

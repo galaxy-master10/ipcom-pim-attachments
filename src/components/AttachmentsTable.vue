@@ -2,29 +2,29 @@
   <v-card class="mt-6">
     <v-card-title>{{ title }}</v-card-title>
 
-    <!-- Loading state -->
+
     <v-card-text v-if="loading" class="text-center">
       <v-progress-circular indeterminate color="primary"></v-progress-circular>
       <div class="mt-2">Laden van attachment data...</div>
     </v-card-text>
 
-    <!-- Error state -->
     <v-card-text v-else-if="error" class="text-center text-error">
       <v-icon icon="mdi-alert-circle" color="error" size="large" class="mb-2"></v-icon>
       <div>{{ error }}</div>
     </v-card-text>
 
-    <!-- Data table -->
+
     <v-data-table
         v-else
         :headers="headers"
         :items="processedAttachments"
         :items-per-page="pagination.pageSize"
-        :page="pagination.currentPage"
+
+        disable-pagination
         class="elevation-0"
         hide-default-footer
     >
-      <!-- Name column with icon based on file type -->
+
       <template v-slot:item.name="{ item }">
         <div class="d-flex align-center">
           <v-icon size="small" class="mr-2">{{ getFileIcon(item.name) }}</v-icon>
@@ -32,7 +32,6 @@
         </div>
       </template>
 
-      <!-- Status column with colored chip -->
       <template v-slot:item.status="{ item }">
         <v-chip
             :color="getStatusColor(item.statusLevel)"
@@ -43,19 +42,17 @@
         </v-chip>
       </template>
 
-      <!-- Language column -->
       <template v-slot:item.languageCode="{ item }">
         <v-chip size="small" color="grey-lighten-1">
           {{ item.languageCode }}
         </v-chip>
       </template>
 
-      <!-- Size column -->
+
       <template v-slot:item.size="{ item }">
         {{ formatFileSize(item.size) }}
       </template>
 
-      <!-- Boolean columns -->
       <template v-slot:item.published="{ item }">
         <v-icon :color="item.published ? 'success' : 'grey'">
           {{ item.published ? 'mdi-check-circle' : 'mdi-close-circle' }}
@@ -69,9 +66,7 @@
       </template>
     </v-data-table>
 
-    <!-- Pagination with page size options -->
     <div class="d-flex justify-space-between align-center px-4 py-3">
-      <!-- Page size selector on the left -->
       <div class="d-flex align-center">
         <span class="text-body-2 mr-2">Rijen per pagina:</span>
         <v-select
@@ -85,7 +80,7 @@
             @update:model-value="changePageSize"
         ></v-select>
       </div>
-      <!-- Pagination controls on the right -->
+
       <div class="d-flex align-center">
         <v-btn
             icon="mdi-chevron-left"
@@ -109,9 +104,8 @@
 
 <script setup>
 import { ref, computed, onMounted, watch, inject } from 'vue';
-import { AttachmentService } from '../services/attachmentService';
 
-// Props definition
+
 const props = defineProps({
   title: {
     type: String,
@@ -127,7 +121,7 @@ const props = defineProps({
   }
 });
 
-// Use shared state from parent component
+
 const attachments = inject('attachments', ref({ $values: [] }));
 const pagination = inject('pagination', ref({
   currentPage: 1,
@@ -139,10 +133,10 @@ const pagination = inject('pagination', ref({
 const activeFilters = inject('activeFilters', ref({}));
 const fetchAttachments = inject('fetchAttachments', () => console.warn('fetchAttachments not provided'));
 const pageSizeOptions = [10, 25, 50, 75, 100];
-// Emits
+
 const emit = defineEmits(['page-changed']);
 
-// Table headers
+
 const headers = [
   { title: 'ID', key: 'id', align: 'start', sortable: false },
   { title: 'Name', key: 'name', align: 'start' },
@@ -156,7 +150,7 @@ const headers = [
   { title: 'No Resize', key: 'noResize', align: 'center' },
 ];
 
-// Derived data
+
 const processedAttachments = computed(() => {
   // Map received attachments to include the derived product name and status
   return attachments.value.$values?.map(attachment => {
@@ -203,16 +197,15 @@ const changePage = (newPage) => {
   fetchAttachments();
   emit('page-changed', newPage);
 };
-// Change the number of items per page
+
 const changePageSize = (newSize) => {
-  // Reset to page 1 when changing page size to avoid empty results
   pagination.value.currentPage = 1;
   pagination.value.pageSize = newSize;
   fetchAttachments();
   emit('page-size-changed', newSize);
 };
 
-// Utility methods
+
 const getFileIcon = (filename) => {
   if (!filename) return 'mdi-file-question-outline';
 

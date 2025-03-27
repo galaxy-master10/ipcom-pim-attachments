@@ -1,13 +1,11 @@
 <template>
   <v-container>
-    <!-- Filter Options Section -->
     <SimpleFilterPanel
         :initial-filters="activeFilters"
         @filter-changed="onFilterChanged"
         @reset-filters="onFilterReset"
     />
 
-    <!-- Statistics Cards -->
     <v-row>
       <v-col cols="12" md="4">
         <AttachmentStatCard
@@ -35,7 +33,6 @@
       </v-col>
     </v-row>
 
-    <!-- Attachments Table -->
     <AttachmentsTable
         title="Vervallende Attachments"
         :loading="loading"
@@ -53,7 +50,7 @@ import AttachmentsTable from '@/components/AttachmentsTable.vue';
 import { AttachmentService } from "@/services/attachmentService.js";
 import SimpleFilterPanel from "@/components/SimpleFilterPanel.vue";
 
-// State - make these available to child components
+
 const attachments = ref({ $values: [] });
 const loading = ref(false);
 const error = ref(null);
@@ -66,14 +63,14 @@ const pagination = ref({
   totalPages: 0
 });
 
-// Provide these values to child components
+
 provide('attachments', attachments);
 provide('pagination', pagination);
 provide('activeFilters', activeFilters);
 
 const attachmentService = new AttachmentService();
 
-// Computed
+
 const expiringSoon = computed(() => {
   return {
     count: countAttachmentsExpiringWithinDays(7)
@@ -92,7 +89,7 @@ const totalAttachments = computed(() => {
   };
 });
 
-// Methods
+
 function countAttachmentsExpiringWithinDays(days) {
   if (!attachments.value.$values) return 0;
 
@@ -155,7 +152,7 @@ const fetchAttachments = async () => {
   }
 };
 
-// Make fetchAttachments available to child components
+
 provide('fetchAttachments', fetchAttachments);
 
 const onFilterChanged = (filters) => {
@@ -172,20 +169,16 @@ const onFilterReset = () => {
   fetchAttachments();
 };
 
-// Handle page change event from AttachmentsTable
+
 const onPageChanged = (page) => {
   console.log('Page changed to:', page);
   pagination.value.currentPage = page;
-  // fetchAttachments is already called within the AttachmentsTable component
 };
-
-
 
 const onPageSizeChanged = (size) => {
   console.log('Page size changed to:', size);
   pagination.value.pageSize = size;
-  pagination.value.currentPage = 1; // Reset to first page
-  // fetchAttachments is already called within the AttachmentsTable component
+  pagination.value.currentPage = 1;
 };
 
 // Lifecycle
