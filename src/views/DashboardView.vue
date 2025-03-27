@@ -10,7 +10,7 @@
       <v-col cols="12" md="4">
         <AttachmentStatCard
             title="Vervalt binnen 7 dagen"
-            :count="expiringSoon.count"
+            :count="expiringWithin7Days"
             label="attachments"
             color="error"
         />
@@ -18,7 +18,7 @@
       <v-col cols="12" md="4">
         <AttachmentStatCard
             title="Vervalt binnen 30 dagen"
-            :count="expiringThisMonth.count"
+            :count="expiringWithin30Days"
             label="attachments"
             color="warning"
         />
@@ -26,7 +26,7 @@
       <v-col cols="12" md="4">
         <AttachmentStatCard
             title="Totaal aantal attachments"
-            :count="totalAttachments.count"
+            :count="totalAttachments"
             label="attachments"
             color="info"
         />
@@ -49,7 +49,6 @@ import AttachmentStatCard from '@/components/AttachmentStatCard.vue';
 import AttachmentsTable from '@/components/AttachmentsTable.vue';
 import { AttachmentService } from "@/services/attachmentService.js";
 import AttachmentsFilter from "@/components/AttachmentsFilter.vue";
-import { countAttachmentsExpiringWithinDays } from '../utilities/utilities.js';
 
 
 
@@ -57,6 +56,9 @@ const attachments = ref({ $values: [] });
 const loading = ref(false);
 const error = ref(null);
 const activeFilters = ref({});
+const expiringWithin7Days = ref(0);
+const expiringWithin30Days = ref(0);
+const totalAttachments = ref(0);
 
 const pagination = ref({
   currentPage: 1,
@@ -72,24 +74,6 @@ provide('activeFilters', activeFilters);
 
 const attachmentService = new AttachmentService();
 
-
-const expiringSoon = computed(() => {
-  return {
-    count: countAttachmentsExpiringWithinDays(30, attachments)
-  };
-});
-
-const expiringThisMonth = computed(() => {
-  return {
-    count: countAttachmentsExpiringWithinDays(30, attachments)
-  };
-});
-
-const totalAttachments = computed(() => {
-  return {
-    count: (attachments.value.$values || []).length
-  };
-});
 
 
 const fetchAttachments = async () => {
@@ -125,6 +109,12 @@ const fetchAttachments = async () => {
       totalItems: response.totalRecords || 0,
       totalPages: response.totalPages || 0
     };
+
+    // Update expiring attachments
+
+    expiringWithin7Days.value = response.expiringWithin7Days;
+    expiringWithin30Days.value = response.expiringWithin30Days;
+    totalAttachments.value = response.totalRecords;
 
   } catch (err) {
     console.error('Error fetching attachments:', err);

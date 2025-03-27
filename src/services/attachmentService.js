@@ -36,7 +36,9 @@ export class AttachmentService {
                 pageNumber: response.data.pageNumber,
                 pageSize: response.data.pageSize,
                 totalRecords: response.data.totalRecords,
-                totalPages: response.data.totalPages
+                totalPages: response.data.totalPages,
+                expiringWithin7Days: response.data.expiringWithin7Days,
+                expiringWithin30Days: response.data.expiringWithin30Days,
             };
         } catch (error) {
             console.error('Error in AttachmentService.getAllAttachements:', error);
