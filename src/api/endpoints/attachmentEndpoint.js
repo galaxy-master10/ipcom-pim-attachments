@@ -3,7 +3,6 @@ import apiClient from "../config/axiosConfig";
 
 export const attachmentEndpointApi = {
     getAll: (filter, pageNumber = 1, pageSize = 10) => {
-        // Convert boolean values to strings for proper query parameter handling
         const processedFilter = { ...filter };
         for (const key in processedFilter) {
             if (typeof processedFilter[key] === 'boolean') {
@@ -18,7 +17,6 @@ export const attachmentEndpointApi = {
                 pageSize
             },
             paramsSerializer: params => {
-                // Convert params object to query string manually if needed
                 const searchParams = new URLSearchParams();
 
                 for (const key in params) {

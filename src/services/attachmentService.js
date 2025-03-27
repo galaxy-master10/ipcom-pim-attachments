@@ -6,7 +6,6 @@ export class AttachmentService {
             pageNumber = Number(pageNumber);
             pageSize = Number(pageSize);
 
-            // Convert date strings to proper format for the API if they exist
             const formattedFilters = { ...filters };
 
             if (formattedFilters.expiryDateFrom) {
@@ -30,8 +29,6 @@ export class AttachmentService {
                     }
                 }
             });
-
-            console.log('Sending filters to API:', cleanFilters);
 
             const response = await attachmentEndpointApi.getAll(cleanFilters, pageNumber, pageSize);
             return {
