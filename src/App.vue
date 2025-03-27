@@ -20,7 +20,7 @@
         </v-btn>
 
         <!-- Notification Bell with Badge -->
-        <v-btn class="mr-2" icon>
+        <v-btn class="mr-2" icon @click="goToNotifications">
           <v-badge
               :content="notificationCount"
               :model-value="notificationCount > 0"
@@ -66,12 +66,30 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, onMounted, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import { useNotificationStore } from './stores/notificationStore';
 
 const router = useRouter();
+const route = useRoute();
+const notificationStore = useNotificationStore();
+
+// Keep track of current route for active button highlighting
 const currentRoute = ref('/dashboard');
-const notificationCount = ref(3); // Example notification count
+
+// Track unread notification count
+const notificationCount = computed(() => {
+  return notificationStore.unreadCount;
+});
+
+// Update current route when it changes
+watch(
+    () => route.path,
+    (newPath) => {
+      currentRoute.value = newPath;
+    },
+    { immediate: true }
+);
 
 const currentDate = computed(() => {
   const date = new Date();
@@ -82,10 +100,15 @@ const currentDate = computed(() => {
   });
 });
 
+const goToNotifications = () => {
+  router.push('/notifications');
+  currentRoute.value = '/notifications';
+};
 
 const logout = () => {
   // Handle logout functionality
   console.log('Logging out...');
+  // In a real app, you'd clear auth tokens and redirect to login
   // router.push('/login');
 };
 </script>
