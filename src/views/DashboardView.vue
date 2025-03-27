@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <SimpleFilterPanel
+    <AttachmentsFilter
         :initial-filters="activeFilters"
         @filter-changed="onFilterChanged"
         @reset-filters="onFilterReset"
@@ -48,7 +48,7 @@ import { ref, computed, onMounted, provide } from 'vue';
 import AttachmentStatCard from '@/components/AttachmentStatCard.vue';
 import AttachmentsTable from '@/components/AttachmentsTable.vue';
 import { AttachmentService } from "@/services/attachmentService.js";
-import SimpleFilterPanel from "@/components/SimpleFilterPanel.vue";
+import AttachmentsFilter from "@/components/AttachmentsFilter.vue";
 
 
 const attachments = ref({ $values: [] });
