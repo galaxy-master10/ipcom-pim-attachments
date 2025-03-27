@@ -66,3 +66,18 @@ export const formatFileSize = (bytes) => {
 
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
+
+export const getStatusAndLevel = (expiryDate) => {
+    if (!expiryDate) return { status: 'Active', statusLevel: 4 };
+
+    const today = new Date();
+    const expiry = new Date(expiryDate);
+    const daysToExpiry = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+
+    if (daysToExpiry <= 0) return { status: 'Verlopen', statusLevel: 0 };
+    if (daysToExpiry <= 7) return { status: `Vervalt binnen ${daysToExpiry} dagen`, statusLevel: 1 };
+    if (daysToExpiry <= 14) return { status: `Vervalt binnen ${daysToExpiry} dagen`, statusLevel: 2 };
+    if (daysToExpiry <= 30) return { status: `Vervalt binnen ${daysToExpiry} dagen`, statusLevel: 3 };
+
+    return { status: 'Active', statusLevel: 4 };
+};

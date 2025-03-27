@@ -103,9 +103,8 @@
 
 <script setup>
 import { ref, computed, inject } from 'vue';
-import {getFileIcon} from "@/utilities/utilities.js";
-import {getStatusColor} from "@/utilities/utilities.js";
-import {formatFileSize} from "@/utilities/utilities.js";
+import {getFileIcon, getStatusAndLevel, getStatusColor, formatFileSize } from "@/utilities/utilities.js";
+
 
 const props = defineProps({
   title: {
@@ -153,34 +152,10 @@ const headers = [
 
 
 const processedAttachments = computed(() => {
-
   return attachments.value.$values?.map(attachment => {
-    const product = attachment.products && attachment.products.$values && attachment.products.$values.length > 0
-        ? (attachment.products.$values[0].name || 'Unknown')
-        : 'Unknown';
+    const product = attachment.products?.$values?.[0]?.name || 'Unknown';
 
-
-    let status = 'Active';
-    let statusLevel = 4;
-    if (attachment.expiryDate) {
-      const expiryDate = new Date(attachment.expiryDate);
-      const today = new Date();
-      const daysToExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
-
-      if (daysToExpiry <= 0) {
-        status = 'Verlopen';
-        statusLevel = 0;
-      } else if (daysToExpiry <= 7) {
-        status = `Vervalt binnen ${daysToExpiry} dagen`;
-        statusLevel = 1;
-      } else if (daysToExpiry <= 14) {
-        status = `Vervalt binnen ${daysToExpiry} dagen`;
-        statusLevel = 2;
-      } else if (daysToExpiry <= 30) {
-        status = `Vervalt binnen ${daysToExpiry} dagen`;
-        statusLevel = 3;
-      }
-    }
+    const { status, statusLevel } = getStatusAndLevel(attachment.expiryDate);
 
     return {
       ...attachment,
@@ -190,7 +165,6 @@ const processedAttachments = computed(() => {
     };
   }) || [];
 });
-
 const changePage = (newPage) => {
   pagination.value.currentPage = newPage;
   fetchAttachments();
