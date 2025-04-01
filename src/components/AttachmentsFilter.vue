@@ -62,6 +62,17 @@
             </v-col>
             <v-col cols="12" sm="6" md="4">
               <v-text-field
+                  v-model.number="filters.categoryName"
+                  label="Category"
+                  variant="outlined"
+                  hide-details
+                  density="compact"
+                  class="mb-3"
+                  clearable
+              ></v-text-field>
+            </v-col>
+            <v-col cols="12" sm="6" md="4">
+              <v-text-field
                   v-model.number="filters.index"
                   label="Index"
                   type="number"
@@ -161,7 +172,8 @@ const filters = reactive({
   noResize: null,
   index: '',
   expiryDateFrom: '',
-  expiryDateTo: ''
+  expiryDateTo: '',
+  categoryName: ''
 });
 
 

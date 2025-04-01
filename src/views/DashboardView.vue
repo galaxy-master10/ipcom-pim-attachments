@@ -157,5 +157,6 @@ const onPageSizeChanged = (size) => {
 // Lifecycle
 onMounted(() => {
   fetchAttachments();
+  console.log(attachments)
 });
 </script>

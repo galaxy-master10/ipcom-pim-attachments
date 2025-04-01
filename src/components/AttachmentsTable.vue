@@ -143,6 +143,7 @@ const headers = [
   { title: 'Product', key: 'product', align: 'start' },
   { title: 'Status', key: 'status', align: 'center' },
   { title: 'Expiry Date', key: 'expiryDate', align: 'start' },
+  { title: 'Category', key: 'category', align: 'start' },
   { title: 'Index', key: 'index', align: 'center' },
   { title: 'Language', key: 'languageCode', align: 'center' },
   { title: 'Size', key: 'size', align: 'end' },
@@ -154,12 +155,14 @@ const headers = [
 const processedAttachments = computed(() => {
   return attachments.value.$values?.map(attachment => {
     const product = attachment.products?.$values?.[0]?.name || 'Unknown';
+    const category = attachment.categoryNames?.$values?.[0] || 'Unknown';
 
     const { status, statusLevel } = getStatusAndLevel(attachment.expiryDate);
 
     return {
       ...attachment,
       product,
+      category,
       status,
       statusLevel
     };
