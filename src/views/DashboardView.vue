@@ -118,7 +118,7 @@ const fetchAttachments = async () => {
 
   } catch (err) {
     console.error('Error fetching attachments:', err);
-    error.value = `Error loading attachments: ${err.message}`;
+    error.value = `Error loading attachments: ${err.response.data}`;
     attachments.value = { $values: [] };
   } finally {
     loading.value = false;
