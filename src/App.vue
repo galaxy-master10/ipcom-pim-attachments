@@ -42,7 +42,7 @@
             </v-btn>
           </template>
           <v-list>
-            <v-list-item @click="logout">
+            <v-list-item @click="handleLogout">
               <template v-slot:prepend>
                 <v-icon>mdi-logout</v-icon>
               </template>
@@ -59,7 +59,34 @@
 
       <!-- Main Content -->
       <v-main>
-        <router-view />
+
+        <v-alert
+            v-if="authError"
+            type="error"
+            closable
+            class="ma-3"
+            @click:close="authError = null"
+        >
+          {{ authError }}
+          <v-btn @click="microsoftLogin" color="white" class="ml-2" size="small">
+            Retry
+          </v-btn>
+        </v-alert>
+
+
+        <v-container v-if="isAuthenticated">
+          <router-view></router-view>
+        </v-container>
+
+        <v-container v-else class="d-flex flex-column align-center justify-center" style="height: 80vh">
+          <v-icon size="64" color="primary" class="mb-4">mdi-account-lock</v-icon>
+          <h2 class="text-h4 mb-4">Authentication Required</h2>
+          <p class="text-body-1 text-center mb-6">Please log in with your Microsoft account to access the application.</p>
+          <v-btn color="primary" size="large" @click="microsoftLogin">
+            <v-icon left>mdi-microsoft</v-icon>
+            Login with Microsoft
+          </v-btn>
+        </v-container>
       </v-main>
     </v-layout>
   </v-app>
@@ -69,10 +96,14 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useNotificationStore } from './stores/notificationStore';
+import AuthService from "@/auth/authService.js";
 
 const router = useRouter();
 const route = useRoute();
 const notificationStore = useNotificationStore();
+const isAuthenticated = ref(false)
+const authError = ref(null)
+const isLoading = ref(true)
 
 // Keep track of current route for active button highlighting
 const currentRoute = ref('/dashboard');
@@ -105,12 +136,57 @@ const goToNotifications = () => {
   currentRoute.value = '/notifications';
 };
 
-const logout = () => {
-  // Handle logout functionality
-  console.log('Logging out...');
-  // In a real app, you'd clear auth tokens and redirect to login
-  // router.push('/login');
-};
+// Login with Microsoft
+const microsoftLogin = async () => {
+  try {
+    authError.value = null;
+    await AuthService.login();
+
+  } catch (error) {
+    authError.value = 'Failed to login. Please try again.';
+  }
+}
+
+// Check authentication status
+const checkAuthentication = async () => {
+  try {
+    isLoading.value = true;
+
+    await AuthService.initialize();
+
+
+    const response = await AuthService.handleRedirectPromise();
+
+    if (response) {
+
+      isAuthenticated.value = true;
+    } else {
+
+      isAuthenticated.value = await AuthService.isAuthenticated();
+    }
+
+    isLoading.value = false;
+  } catch (error) {
+    authError.value = "Failed to check authentication status. Please try again.";
+    isAuthenticated.value = false;
+    isLoading.value = false;
+  }
+}
+
+const handleLogout = async () => {
+  try {
+    await AuthService.logout();
+    isAuthenticated.value = false;
+  } catch (error) {
+    authError.value = "Failed to logout. Please try again.";
+  }
+}
+
+
+onMounted(async () => {
+
+  await checkAuthentication();
+})
 </script>
 
 <style scoped>

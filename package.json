@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@azure/msal-browser": "^4.8.0",
     "@mdi/font": "^7.4.47",
     "axios": "^1.8.4",
     "date-fns": "^4.1.0",
