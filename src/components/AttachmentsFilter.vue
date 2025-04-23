@@ -1,7 +1,7 @@
 <template>
   <v-card class="filter-panel mb-4">
     <v-card-title class="bg-primary text-white py-3 d-flex justify-space-between align-center">
-      Filter opties
+      Filter options
       <v-btn
           icon
           variant="text"
@@ -19,7 +19,7 @@
             <v-col cols="12" sm="6" md="4">
               <v-text-field
                   v-model="filters.name"
-                  label="Naam"
+                  label="Name"
                   variant="outlined"
                   hide-details
                   density="compact"
@@ -52,7 +52,7 @@
             <v-col cols="12" sm="6" md="4">
               <v-text-field
                   v-model="filters.languageCode"
-                  label="Taal"
+                  label="Language"
                   variant="outlined"
                   hide-details
                   density="compact"
@@ -87,7 +87,7 @@
               <v-select
                   v-model="filters.published"
                   :items="booleanOptions"
-                  label="Gepubliceerd"
+                  label="Published"
                   variant="outlined"
                   hide-details
                   density="compact"
@@ -99,7 +99,7 @@
               <v-select
                   v-model="filters.noResize"
                   :items="booleanOptions"
-                  label="Geen Resize"
+                  label="No Resize"
                   variant="outlined"
                   hide-details
                   density="compact"
@@ -110,7 +110,7 @@
             <v-col cols="12" sm="6" md="4">
               <v-text-field
                   v-model="filters.expiryDateFrom"
-                  label="Vervaldatum vanaf"
+   label="Expiry Date From"
                   type="date"
                   variant="outlined"
                   hide-details
@@ -122,7 +122,7 @@
             <v-col cols="12" sm="6" md="4">
               <v-text-field
                   v-model="filters.expiryDateTo"
-                  label="Vervaldatum tot"
+                 label="Expiry Date To"
                   type="date"
                   variant="outlined"
                   hide-details
@@ -139,7 +139,7 @@
             Reset
           </v-btn>
           <v-btn color="primary" @click="applyFilters">
-            Toepassen
+           Apply
           </v-btn>
         </v-card-actions>
       </div>
@@ -178,8 +178,8 @@ const filters = reactive({
 
 
 const booleanOptions = [
-  { title: 'Ja', value: true },
-  { title: 'Nee', value: false }
+  { title: 'Yes', value: true },
+  { title: 'No', value: false }
 ];
 
 watch(() => props.initialFilters, (newFilters) => {

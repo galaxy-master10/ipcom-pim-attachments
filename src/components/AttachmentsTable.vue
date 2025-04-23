@@ -5,7 +5,7 @@
 
     <v-card-text v-if="loading" class="text-center">
       <v-progress-circular indeterminate color="primary"></v-progress-circular>
-      <div class="mt-2">Laden van attachment data...</div>
+      <div class="mt-2">Loading attachment data...</div>
     </v-card-text>
 
     <v-card-text v-else-if="error" class="text-center text-error">
@@ -67,7 +67,7 @@
 
     <div class="d-flex justify-space-between align-center px-4 py-3">
       <div class="d-flex align-center">
-        <span class="text-body-2 mr-2">Rijen per pagina:</span>
+     <span class="text-body-2 mr-2">Rows per page:</span>
         <v-select
             v-model="pagination.pageSize"
             :items="pageSizeOptions"
@@ -88,7 +88,7 @@
             @click="changePage(pagination.currentPage - 1)"
         />
         <span class="mx-4">
-      Pagina {{ pagination.currentPage }} van {{ pagination.totalPages }}
+      Page {{ pagination.currentPage }} of {{ pagination.totalPages }}
     </span>
         <v-btn
             icon="mdi-chevron-right"

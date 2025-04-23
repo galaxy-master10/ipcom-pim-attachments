@@ -9,7 +9,7 @@
     <v-row>
       <v-col cols="12" md="4">
         <AttachmentStatCard
-            title="Vervalt binnen 7 dagen"
+            title="Expires within 7 days"
             :count="expiringWithin7Days"
             label="attachments"
             color="error"
@@ -17,7 +17,7 @@
       </v-col>
       <v-col cols="12" md="4">
         <AttachmentStatCard
-            title="Vervalt binnen 30 dagen"
+           title="Expires within 30 days"
             :count="expiringWithin30Days"
             label="attachments"
             color="warning"
@@ -25,7 +25,7 @@
       </v-col>
       <v-col cols="12" md="4">
         <AttachmentStatCard
-            title="Totaal aantal attachments"
+           title="Total number of attachments"
             :count="totalAttachments"
             label="attachments"
             color="info"
@@ -34,7 +34,7 @@
     </v-row>
 
     <AttachmentsTable
-        title="Vervallende Attachments"
+       title="Expiring Attachments"
         :loading="loading"
         :error="error"
         @page-changed="onPageChanged"
