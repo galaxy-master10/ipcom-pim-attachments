@@ -1,13 +1,12 @@
 <template>
   <v-app>
     <v-layout>
-      <!-- Simplified App Bar -->
+
       <v-app-bar color="primary" dark elevation="2">
         <v-app-bar-title>IPCOM Attachment Expiry System</v-app-bar-title>
 
         <v-spacer></v-spacer>
 
-        <!-- Dashboard Button -->
         <v-btn
             class="mr-2"
             variant="text"
@@ -19,7 +18,6 @@
           DASHBOARD
         </v-btn>
 
-        <!-- Notification Bell with Badge -->
         <v-btn class="mr-2" icon @click="goToNotifications">
           <v-badge
               :content="notificationCount"
@@ -30,7 +28,6 @@
           </v-badge>
         </v-btn>
 
-        <!-- User Menu -->
         <v-menu offset-y>
           <template v-slot:activator="{ props }">
             <v-btn
@@ -51,13 +48,11 @@
           </v-list>
         </v-menu>
 
-        <!-- Date Display in Circle -->
         <div class="date-circle d-flex align-center justify-center">
           {{ currentDate }}
         </div>
       </v-app-bar>
 
-      <!-- Main Content -->
       <v-main>
 
         <v-alert
@@ -105,15 +100,12 @@ const isAuthenticated = ref(false)
 const authError = ref(null)
 const isLoading = ref(true)
 
-// Keep track of current route for active button highlighting
 const currentRoute = ref('/dashboard');
 
-// Track unread notification count
 const notificationCount = computed(() => {
   return notificationStore.unreadCount;
 });
 
-// Update current route when it changes
 watch(
     () => route.path,
     (newPath) => {
@@ -136,7 +128,6 @@ const goToNotifications = () => {
   currentRoute.value = '/notifications';
 };
 
-// Login with Microsoft
 const microsoftLogin = async () => {
   try {
     authError.value = null;
@@ -147,7 +138,6 @@ const microsoftLogin = async () => {
   }
 }
 
-// Check authentication status
 const checkAuthentication = async () => {
   try {
     isLoading.value = true;
