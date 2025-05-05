@@ -18,15 +18,6 @@
           DASHBOARD
         </v-btn>
 
-        <v-btn class="mr-2" icon @click="goToNotifications">
-          <v-badge
-              :content="notificationCount"
-              :model-value="notificationCount > 0"
-              color="error"
-          >
-            <v-icon>mdi-bell-outline</v-icon>
-          </v-badge>
-        </v-btn>
 
         <v-menu offset-y>
           <template v-slot:activator="{ props }">

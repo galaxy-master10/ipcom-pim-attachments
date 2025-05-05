@@ -9,11 +9,6 @@ const routes = [
         path: '/dashboard',
         name: 'Dashboard',
         component:  () => import('../views/DashboardView.vue')
-    },
-    {
-        path: '/notifications',
-        name: 'Notifications',
-        component:  () => import('../views/NotificationsView.vue')
     }
 ];
 
