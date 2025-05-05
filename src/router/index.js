@@ -9,7 +9,13 @@ const routes = [
         path: '/dashboard',
         name: 'Dashboard',
         component:  () => import('../views/DashboardView.vue')
+    },
+    {
+        path: '/attachments/:id',
+        name: 'AttachmentDetail',
+        component: () => import('@/views/AttachmentDetailView.vue')
     }
+
 ];
 
 

@@ -32,5 +32,8 @@ export const attachmentEndpointApi = {
 
 
     get: (id) => apiClient.get(`/attachments/${id}`),
+
+    update: (id, data) => apiClient.put(`/attachments/${id}`, data),
+    delete: (id) => apiClient.delete(`/attachments/${id}`),
 }
 

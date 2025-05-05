@@ -55,4 +55,24 @@ export class AttachmentService {
             throw error;
         }
     }
+
+    async updateAttachment(attachmentData) {
+        try {
+            const response = await attachmentEndpointApi.update(attachmentData.id, attachmentData);
+            return response.data;
+        } catch (error) {
+            console.error('Error in AttachmentService.updateAttachment:', error);
+            throw error;
+        }
+    }
+
+    async deleteAttachment(id) {
+        try {
+            const response = await attachmentEndpointApi.delete(id);
+            return response.data;
+        } catch (error) {
+            console.error('Error in AttachmentService.deleteAttachment:', error);
+            throw error;
+        }
+    }
 }
