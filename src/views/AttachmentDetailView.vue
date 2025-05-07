@@ -135,6 +135,12 @@
                       status-chip
                       :status-level="getStatus(attachment.expiryDate).statusLevel"
                   />
+
+                  <attachment-detail-item
+                      label="Countries:"
+                      :value="getCountries()"
+                      chips
+                  />
                 </v-card>
               </v-col>
             </v-row>
@@ -225,7 +231,7 @@ const loadAttachment = async () => {
 
     const data = await attachmentService.getAttachement(id);
     attachment.value = data;
-    console.log('Attachment data loaded:', data.content);
+    console.log('Attachment data loaded:', data);
   } catch (err) {
     console.error('Error loading attachment:', err);
     error.value = `Failed to load attachment details: ${err.message || 'Unknown error'}`;
@@ -237,6 +243,10 @@ const loadAttachment = async () => {
 
 const getProductName = () => {
   return attachment.value.products?.$values?.[0]?.name || 'Unknown';
+};
+
+const getCountries = () => {
+  return attachment.value.countryNames?.$values || [];
 };
 
 const getCategoryNames = () => {

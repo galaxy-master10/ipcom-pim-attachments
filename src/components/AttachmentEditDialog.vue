@@ -188,7 +188,6 @@ const formData = ref({
   status: 'Active'
 });
 
-// Mock data for dropdowns - replace with actual API calls
 const languageOptions = ['NL', 'EN', 'DE', 'FR', 'ES', 'IT'];
 const productOptions = ref([
   { id: '0562a3f8-92a8-414d-be0a-58827f9a7f4c', name: 'Armaflex Ultima tubes' },
@@ -198,7 +197,6 @@ const productOptions = ref([
 const categoryOptions = ['TDS', 'SDS', 'Afbeeldingen', 'Manual', 'Certificate'];
 const statusOptions = ['Active', 'Inactive', 'Pending'];
 
-// Initialize form data when attachment changes
 watch(attachment, (newAttachment) => {
   if (newAttachment?.id) {
     formData.value = {
@@ -216,16 +214,12 @@ watch(attachment, (newAttachment) => {
   }
 }, { immediate: true });
 
-// Save attachment changes
 const saveAttachment = async () => {
   try {
     saving.value = true;
     error.value = null;
 
-    // Example implementation:
-    // const result = await attachmentService.updateAttachment(formData.value);
 
-    // For demo purposes, we'll just simulate a successful update
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     emit('updated');
