@@ -20,8 +20,9 @@
         :items="processedAttachments"
         :items-per-page="pagination.pageSize"
         disable-pagination
-        class="elevation-0"
+        class="elevation-0 cursor-pointer"
         hide-default-footer
+        @click:row="navigateToDetail"
     >
 
       <template v-slot:item.name="{ item }">
@@ -104,6 +105,7 @@
 <script setup>
 import { ref, computed, inject } from 'vue';
 import {getFileIcon, getStatusAndLevel, getStatusColor, formatFileSize } from "@/utilities/utilities.js";
+import {useRouter} from "vue-router";
 
 
 const props = defineProps({
@@ -121,6 +123,8 @@ const props = defineProps({
   }
 });
 
+
+const router = useRouter();
 
 const attachments = inject('attachments', ref({ $values: [] }));
 const pagination = inject('pagination', ref({
@@ -174,6 +178,10 @@ const changePage = (newPage) => {
   emit('page-changed', newPage);
 };
 
+const navigateToDetail = (event, {item}) => {
+  router.push(`/attachments/${item.id}`);
+};
+
 const changePageSize = (newSize) => {
   pagination.value.currentPage = 1;
   pagination.value.pageSize = newSize;
@@ -182,3 +190,13 @@ const changePageSize = (newSize) => {
 };
 
 </script>
+
+<style>
+.cursor-pointer tbody tr {
+  cursor: pointer;
+}
+
+.cursor-pointer tbody tr:hover {
+  background-color: darkgreen;
+}
+</style>

@@ -22,7 +22,6 @@
     </v-card>
 
     <template v-else>
-      <!-- Attachment Header Card -->
       <v-card class="mb-4">
         <v-card-item>
           <v-row align="center">
@@ -41,7 +40,7 @@
               <v-btn
                   color="primary"
                   prepend-icon="mdi-pencil"
-                  class="mr-2"
+                  class="mr-4 mt-2"
                   @click="showEditDialog = true"
               >
                 Edit
@@ -72,7 +71,6 @@
         </v-card-item>
       </v-card>
 
-      <!-- Tabs -->
       <v-card>
         <v-tabs v-model="activeTab" color="primary" class="elevation-0">
           <v-tab value="details">Details</v-tab>
@@ -83,10 +81,8 @@
         <v-divider></v-divider>
 
         <v-window v-model="activeTab">
-          <!-- Details Tab -->
           <v-window-item value="details">
             <v-row>
-              <!-- Left Column: File Information -->
               <v-col cols="12" md="6">
                 <v-card flat class="pa-4">
                   <v-card-title class="pa-0 mb-4">File Information</v-card-title>
@@ -112,7 +108,6 @@
                 </v-card>
               </v-col>
 
-              <!-- Right Column: Association Information -->
               <v-col cols="12" md="6">
                 <v-card flat class="pa-4">
                   <v-card-title class="pa-0 mb-4">Association Information</v-card-title>
@@ -145,12 +140,10 @@
             </v-row>
           </v-window-item>
 
-          <!-- Preview Tab -->
           <v-window-item value="preview">
             <attachment-preview :attachment="attachment" />
           </v-window-item>
 
-          <!-- History Tab -->
           <v-window-item value="history">
             <v-card flat class="pa-4">
               <v-card-title class="pa-0 mb-4">Attachment History</v-card-title>
@@ -161,14 +154,12 @@
       </v-card>
     </template>
 
-    <!-- Edit Attachment Dialog -->
     <attachment-edit-dialog
         v-model="showEditDialog"
         :attachment="attachment"
         @updated="loadAttachment"
     />
 
-    <!-- Delete Confirmation Dialog -->
     <v-dialog v-model="showDeleteConfirmation" max-width="500px">
       <v-card>
         <v-card-title class="text-h5">Confirm Deletion</v-card-title>
@@ -210,11 +201,7 @@ const showEditDialog = ref(false);
 const showDeleteConfirmation = ref(false);
 
 const breadcrumbs = [
-  {
-    title: 'Dashboard',
-    disabled: false,
-    href: '/dashboard',
-  },
+
   {
     title: 'Attachments',
     disabled: false,
@@ -226,7 +213,6 @@ const breadcrumbs = [
   },
 ];
 
-// Load attachment data from API
 const loadAttachment = async () => {
   try {
     loading.value = true;
@@ -239,6 +225,7 @@ const loadAttachment = async () => {
 
     const data = await attachmentService.getAttachement(id);
     attachment.value = data;
+    console.log('Attachment data loaded:', data.content);
   } catch (err) {
     console.error('Error loading attachment:', err);
     error.value = `Failed to load attachment details: ${err.message || 'Unknown error'}`;
@@ -247,7 +234,7 @@ const loadAttachment = async () => {
   }
 };
 
-// Helper methods for attachment data display
+
 const getProductName = () => {
   return attachment.value.products?.$values?.[0]?.name || 'Unknown';
 };
@@ -265,18 +252,14 @@ const getExpiryDateHighlight = (expiryDate) => {
   return statusLevel;
 };
 
-// Action handlers
+
 const downloadAttachment = () => {
-  // Implementation would depend on your API
   console.log('Download attachment:', attachment.value.id);
-  // Example implementation:
-  // window.open(`/api/attachments/${attachment.value.id}/download`, '_blank');
 };
 
 const deleteAttachment = async () => {
   try {
-    // Implementation would depend on your API
-    // await attachmentService.deleteAttachment(attachment.value.id);
+
     showDeleteConfirmation.value = false;
     router.push('/dashboard');
   } catch (error) {
@@ -284,7 +267,6 @@ const deleteAttachment = async () => {
   }
 };
 
-// Initialize component
 onMounted(() => {
   loadAttachment();
 });
