@@ -36,11 +36,11 @@ export const attachmentEndpointApi = {
     update: (id, data) => apiClient.put(`/attachments/${id}`, data),
     delete: (id) => apiClient.delete(`/attachments/${id}`),
 
-    // get all categores
-
     getCategories: () => apiClient.get('/attachments/categories'),
 
     // get countries
     getCountries: () => apiClient.get('/attachments/countries'),
+
+    getLanguages: () => apiClient.get('/attachments/languages'),
 }
 

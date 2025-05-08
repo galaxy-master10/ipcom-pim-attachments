@@ -47,11 +47,28 @@
 
                 <v-select
                     v-model="formData.languageCode"
-                    :items="languageOptions"
+                    :items="languages"
                     label="Language"
                     variant="outlined"
                     density="comfortable"
-                ></v-select>
+                    item-title="name"
+                    item-value="isoCode"
+                    :loading="loadingLanguages"
+                    :disabled="loadingLanguages"
+                    @update:model-value="handleLanguageChange"
+                >
+                  <template v-slot:selection="{ item }">
+                    <span>{{ item.raw.name }} ({{ item.raw.isoCode }})</span>
+                  </template>
+                  <template v-slot:item="{ item, props }">
+                    <v-list-item v-bind="props">
+                      <template v-slot:prepend>
+                        <span class="language-code">{{ item.raw.isoCode }}</span>
+                      </template>
+                      <v-list-item-title>{{ item.raw.name }}</v-list-item-title>
+                    </v-list-item>
+                  </template>
+                </v-select>
 
                 <v-checkbox
                     v-model="formData.published"
@@ -97,13 +114,25 @@
 
                 <v-select
                     v-model="formData.categories"
-                    :items="categoryOptions"
+                    :items="filteredCategories"
                     label="Categories"
                     variant="outlined"
                     density="comfortable"
                     multiple
                     chips
-                ></v-select>
+                    item-title="name"
+                    item-value="id"
+                    :loading="loadingCategories"
+                    :disabled="loadingCategories"
+                    :hint="loadingCategories ? 'Loading categories...' : filteredCategoriesHint"
+                    persistent-hint
+                >
+                  <template v-slot:selection="{ item }">
+                    <v-chip>
+                      <span>{{ item.raw.name }}</span>
+                    </v-chip>
+                  </template>
+                </v-select>
 
                 <v-select
                     v-model="formData.countries"
@@ -207,7 +236,11 @@ const saving = ref(false);
 const error = ref(null);
 const loadingCountries = ref(false);
 const loadingCategories = ref(false);
+const loadingLanguages = ref(false);
 const countryOptions = ref([]);
+const languages = ref([]);
+const categoryData = ref([]);
+const filteredCategories = ref([]);
 const formData = ref({
   id: '',
   name: '',
@@ -222,14 +255,20 @@ const formData = ref({
   status: 'Active'
 });
 
-const languageOptions = ['NL', 'EN', 'DE', 'FR', 'ES', 'IT'];
 const productOptions = ref([
   { id: '0562a3f8-92a8-414d-be0a-58827f9a7f4c', name: 'Armaflex Ultima tubes' },
   { id: '1', name: 'ORYX COLLAR WR' },
   { id: '2', name: 'Product 3' }
 ]);
-const categoryOptions = ['TDS', 'SDS', 'Afbeeldingen', 'Manual', 'Certificate'];
 const statusOptions = ['Active', 'Inactive', 'Pending'];
+
+// Computed property to provide hint for filtered categories
+const filteredCategoriesHint = computed(() => {
+  if (filteredCategories.value.length === 0 && formData.value.languageCode) {
+    return `No categories available for language: ${formData.value.languageCode}`;
+  }
+  return '';
+});
 
 // Process countries data for the dropdown and display
 const processCountryData = (countriesData) => {
@@ -242,6 +281,100 @@ const processCountryData = (countriesData) => {
     name: country.name,
     countryCode: country.countryCode
   }));
+};
+
+// Process the language data from the API
+const processLanguageData = (languageData) => {
+  if (!languageData || !languageData.$values) {
+    return [];
+  }
+
+  return languageData.$values.map(language => ({
+    id: language.id,
+    name: language.name,
+    isoCode: language.isoCode
+  }));
+};
+
+// Process categories data properly to handle the new structure
+const processCategoryData = (categoriesData) => {
+  if (!categoriesData || !categoriesData.$values) {
+    return [];
+  }
+
+  // Map the complex category structure to a simplified format with translations
+  return categoriesData.$values.map(category => {
+    const translationMap = {};
+
+    // Process translations using the new structure
+    if (category.translations && category.translations.$values) {
+      category.translations.$values.forEach(translation => {
+        translationMap[translation.languageCode] = {
+          id: translation.id,
+          name: translation.languageTranslation,
+          property: translation.property
+        };
+      });
+    }
+
+    return {
+      id: category.id,
+      // Use English as fallback, or first translation, or generic name
+      name: translationMap.EN?.name ||
+          (Object.values(translationMap)[0]?.name) ||
+          'Unnamed Category',
+      translations: translationMap
+    };
+  });
+};
+
+// Fetch languages data
+const fetchLanguages = async () => {
+  try {
+    loadingLanguages.value = true;
+    const data = await attachmentService.getLanguages();
+    languages.value = processLanguageData(data);
+    return data;
+  } catch (error) {
+    console.error('Error fetching languages:', error);
+    return { $values: [] };
+  } finally {
+    loadingLanguages.value = false;
+  }
+};
+
+// Filter categories by the current language code
+const filterCategoriesByLanguage = (languageCode) => {
+  if (!categoryData.value.length || !languageCode) {
+    filteredCategories.value = [];
+    return;
+  }
+
+  // Filter categories that have a translation for the current language
+  const filtered = categoryData.value.filter(category =>
+      category.translations && category.translations[languageCode]
+  );
+
+  // Map filtered categories to format expected by v-select
+  filteredCategories.value = filtered.map(category => ({
+    id: category.id,
+    name: category.translations[languageCode].name
+  }));
+
+  // Update selected categories to ensure they're valid for the current language
+  if (formData.value.categories && formData.value.categories.length > 0) {
+    const validCategoryIds = new Set(filteredCategories.value.map(c => c.id));
+    formData.value.categories = formData.value.categories.filter(catId => {
+      const categoryId = typeof catId === 'object' ? catId.id : catId;
+      return validCategoryIds.has(categoryId);
+    });
+  }
+};
+
+// Handle language change
+const handleLanguageChange = (newLanguage) => {
+  console.log("Language changed to:", newLanguage);
+  filterCategoriesByLanguage(newLanguage);
 };
 
 // Process the selected countries in attachment data
@@ -285,10 +418,19 @@ const fetchCategories = async () => {
   try {
     loadingCategories.value = true;
     const data = await attachmentService.getCategories();
+    console.log("Raw category data:", data);
+    categoryData.value = processCategoryData(data);
+    console.log("Processed category data:", categoryData.value);
+
+    // Initially filter by the current language
+    if (formData.value.languageCode) {
+      filterCategoriesByLanguage(formData.value.languageCode);
+    }
+
     return data;
   } catch (error) {
     console.error('Error fetching categories:', error);
-    return [];
+    return { $values: [] };
   } finally {
     loadingCategories.value = false;
   }
@@ -311,12 +453,24 @@ watch(attachment, (newAttachment) => {
       status: 'Active' // Assuming status is derived from expiryDate and not stored
     };
 
+    // After setting form data, filter categories by the current language
+    if (newAttachment.languageCode && categoryData.value.length > 0) {
+      filterCategoriesByLanguage(newAttachment.languageCode);
+    }
+
     // Ensure countries are correctly mapped after countryOptions are loaded
     if (countryOptions.value.length > 0 && formData.value.countries.length > 0) {
       formData.value.countries = processSelectedCountries(formData.value.countries);
     }
   }
 }, { immediate: true });
+
+// After categoryData is loaded, filter categories by the current language
+watch(categoryData, (newCategoryData) => {
+  if (newCategoryData.length > 0 && formData.value.languageCode) {
+    filterCategoriesByLanguage(formData.value.languageCode);
+  }
+});
 
 // After countryOptions are loaded, update the selectedCountries if needed
 watch(countryOptions, (newCountryOptions) => {
@@ -337,6 +491,12 @@ const saveAttachment = async () => {
       countries: Array.isArray(formData.value.countries)
           ? formData.value.countries.map(country =>
               typeof country === 'object' ? country.id : country
+          )
+          : [],
+      // Make sure categories are in the expected format
+      categories: Array.isArray(formData.value.categories)
+          ? formData.value.categories.map(category =>
+              typeof category === 'object' ? category.id : category
           )
           : []
     };
@@ -361,19 +521,38 @@ const closeDialog = () => {
 };
 
 onMounted(async () => {
-  // Fetch countries and categories data when component mounts
-  await fetchCountries();
-  await fetchCategories();
+  loading.value = true;
+  try {
+    // Fetch data in parallel for better performance
+    const [categoriesPromise, countriesPromise, languagesPromise] = [
+      fetchCategories(),
+      fetchCountries(),
+      fetchLanguages()
+    ];
 
-  // If the attachment data is already available, update the countries selection
-  if (formData.value.countries.length > 0 && countryOptions.value.length > 0) {
-    formData.value.countries = processSelectedCountries(formData.value.countries);
+    // Wait for all data to be loaded
+    await Promise.all([categoriesPromise, countriesPromise, languagesPromise]);
+
+    // If the attachment data is already available, filter categories by language
+    if (formData.value.languageCode && categoryData.value.length > 0) {
+      filterCategoriesByLanguage(formData.value.languageCode);
+    }
+
+    // If the attachment data is already available, update the countries selection
+    if (formData.value.countries.length > 0 && countryOptions.value.length > 0) {
+      formData.value.countries = processSelectedCountries(formData.value.countries);
+    }
+  } catch (err) {
+    console.error("Error during initialization:", err);
+    error.value = "Failed to load required data. Please try again.";
+  } finally {
+    loading.value = false;
   }
 });
 </script>
 
 <style scoped>
-.country-code {
+.country-code, .language-code {
   display: inline-block;
   min-width: 36px;
   padding: 2px 6px;

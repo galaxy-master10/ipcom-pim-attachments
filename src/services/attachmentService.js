@@ -96,5 +96,15 @@ export class AttachmentService {
         }
     }
 
+    async getLanguages() {
+        try {
+            const response = await attachmentEndpointApi.getLanguages();
+            return response.data;
+        } catch (error) {
+            console.error('Error in AttachmentService.getLanguages:', error);
+            throw error;
+        }
+    }
+
 
 }
