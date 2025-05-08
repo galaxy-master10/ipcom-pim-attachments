@@ -100,7 +100,12 @@
                     density="comfortable"
                     type="date"
                 ></v-text-field>
-
+                <v-text-field
+                    v-model="formData.productName"
+                    label="Product Name"
+                    variant="outlined"
+                    density="comfortable"
+                ></v-text-field>
                 <v-select
                     v-model="formData.productId"
                     :items="productOptions"
@@ -244,6 +249,7 @@ const filteredCategories = ref([]);
 const formData = ref({
   id: '',
   name: '',
+  productName: '',
   languageCode: '',
   published: false,
   noResize: false,
