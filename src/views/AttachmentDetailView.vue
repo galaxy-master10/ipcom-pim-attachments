@@ -232,6 +232,8 @@ const loadAttachment = async () => {
     const data = await attachmentService.getAttachement(id);
     attachment.value = data;
     console.log('Attachment data loaded:', data);
+    console.log( getAllCategories());
+    console.log(getAllCountries());
   } catch (err) {
     console.error('Error loading attachment:', err);
     error.value = `Failed to load attachment details: ${err.message || 'Unknown error'}`;
@@ -240,6 +242,26 @@ const loadAttachment = async () => {
   }
 };
 
+
+const getAllCountries = async () => {
+  try {
+    const data = await attachmentService.getCountries();
+    return data;
+  } catch (error) {
+    console.error('Error fetching countries:', error);
+    return []; // Return an empty array or handle the error appropriately
+  }
+};
+
+const getAllCategories = async () => {
+  try {
+    const data = await attachmentService.getCategories();
+    return data;
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    return []; // Return an empty array or handle the error appropriately
+  }
+};
 
 const getProductName = () => {
   return attachment.value.products?.$values?.[0]?.name || 'Unknown';

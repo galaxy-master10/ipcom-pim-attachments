@@ -106,6 +106,36 @@
                 ></v-select>
 
                 <v-select
+                    v-model="formData.countries"
+                    :items="countryOptions"
+                    label="Countries"
+                    variant="outlined"
+                    density="comfortable"
+                    multiple
+                    chips
+                    item-title="name"
+                    item-value="id"
+                    :loading="loadingCountries"
+                    :disabled="loadingCountries"
+                    :hint="loadingCountries ? 'Loading countries...' : ''"
+                    persistent-hint
+                >
+                  <template v-slot:selection="{ item }">
+                    <v-chip>
+                      <span>{{ item.raw.name }} ({{ item.raw.countryCode }})</span>
+                    </v-chip>
+                  </template>
+                  <template v-slot:item="{ item, props }">
+                    <v-list-item v-bind="props">
+                      <template v-slot:prepend>
+                        <span class="country-code">{{ item.raw.countryCode }}</span>
+                      </template>
+                      <v-list-item-title>{{ item.raw.name }}</v-list-item-title>
+                    </v-list-item>
+                  </template>
+                </v-select>
+
+                <v-select
                     v-model="formData.status"
                     :items="statusOptions"
                     label="Status"
@@ -148,7 +178,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, toRefs } from 'vue';
+import { ref, computed, watch, toRefs, onMounted } from 'vue';
 import { AttachmentService } from '@/services/attachmentService.js';
 
 const props = defineProps({
@@ -175,6 +205,9 @@ const form = ref(null);
 const loading = ref(false);
 const saving = ref(false);
 const error = ref(null);
+const loadingCountries = ref(false);
+const loadingCategories = ref(false);
+const countryOptions = ref([]);
 const formData = ref({
   id: '',
   name: '',
@@ -185,6 +218,7 @@ const formData = ref({
   expiryDate: '',
   productId: null,
   categories: [],
+  countries: [],
   status: 'Active'
 });
 
@@ -197,6 +231,70 @@ const productOptions = ref([
 const categoryOptions = ['TDS', 'SDS', 'Afbeeldingen', 'Manual', 'Certificate'];
 const statusOptions = ['Active', 'Inactive', 'Pending'];
 
+// Process countries data for the dropdown and display
+const processCountryData = (countriesData) => {
+  if (!countriesData || !countriesData.$values) {
+    return [];
+  }
+
+  return countriesData.$values.map(country => ({
+    id: country.id,
+    name: country.name,
+    countryCode: country.countryCode
+  }));
+};
+
+// Process the selected countries in attachment data
+const processSelectedCountries = (selectedCountries) => {
+  if (!selectedCountries || !selectedCountries.length) {
+    return [];
+  }
+
+  // If the countries are already objects with id property, return them
+  if (typeof selectedCountries[0] === 'object' && selectedCountries[0].id) {
+    return selectedCountries;
+  }
+
+  // If the selected countries are just strings (country names or ids)
+  // Find the corresponding country objects from the countryOptions
+  return selectedCountries.map(countryName => {
+    const foundCountry = countryOptions.value.find(
+        c => c.name === countryName || c.id === countryName
+    );
+    return foundCountry ? foundCountry.id : countryName;
+  });
+};
+
+// Fetch countries data
+const fetchCountries = async () => {
+  try {
+    loadingCountries.value = true;
+    const data = await attachmentService.getCountries();
+    countryOptions.value = processCountryData(data);
+    return data;
+  } catch (error) {
+    console.error('Error fetching countries:', error);
+    return { $values: [] };
+  } finally {
+    loadingCountries.value = false;
+  }
+};
+
+// Fetch categories data
+const fetchCategories = async () => {
+  try {
+    loadingCategories.value = true;
+    const data = await attachmentService.getCategories();
+    return data;
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    return [];
+  } finally {
+    loadingCategories.value = false;
+  }
+};
+
+// Watch for changes to the attachment prop and update form data
 watch(attachment, (newAttachment) => {
   if (newAttachment?.id) {
     formData.value = {
@@ -208,18 +306,44 @@ watch(attachment, (newAttachment) => {
       index: newAttachment.index || 0,
       expiryDate: newAttachment.expiryDate ? newAttachment.expiryDate.split('T')[0] : '',
       productId: newAttachment.products?.$values?.[0] || null,
+      countries: newAttachment.countryNames?.$values || [],
       categories: newAttachment.categoryNames?.$values || [],
       status: 'Active' // Assuming status is derived from expiryDate and not stored
     };
+
+    // Ensure countries are correctly mapped after countryOptions are loaded
+    if (countryOptions.value.length > 0 && formData.value.countries.length > 0) {
+      formData.value.countries = processSelectedCountries(formData.value.countries);
+    }
   }
 }, { immediate: true });
+
+// After countryOptions are loaded, update the selectedCountries if needed
+watch(countryOptions, (newCountryOptions) => {
+  if (newCountryOptions.length > 0 && formData.value.countries.length > 0) {
+    formData.value.countries = processSelectedCountries(formData.value.countries);
+  }
+});
 
 const saveAttachment = async () => {
   try {
     saving.value = true;
     error.value = null;
 
+    // Prepare data for API
+    const attachmentData = {
+      ...formData.value,
+      // Convert country objects/ids back to the format expected by the API
+      countries: Array.isArray(formData.value.countries)
+          ? formData.value.countries.map(country =>
+              typeof country === 'object' ? country.id : country
+          )
+          : []
+    };
 
+    console.log('Saving attachment data:', attachmentData);
+
+    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     emit('updated');
@@ -235,4 +359,29 @@ const saveAttachment = async () => {
 const closeDialog = () => {
   dialog.value = false;
 };
+
+onMounted(async () => {
+  // Fetch countries and categories data when component mounts
+  await fetchCountries();
+  await fetchCategories();
+
+  // If the attachment data is already available, update the countries selection
+  if (formData.value.countries.length > 0 && countryOptions.value.length > 0) {
+    formData.value.countries = processSelectedCountries(formData.value.countries);
+  }
+});
 </script>
+
+<style scoped>
+.country-code {
+  display: inline-block;
+  min-width: 36px;
+  padding: 2px 6px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-align: center;
+  margin-right: 8px;
+}
+</style>

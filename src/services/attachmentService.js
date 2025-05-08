@@ -75,4 +75,26 @@ export class AttachmentService {
             throw error;
         }
     }
+
+    async getCategories() {
+        try {
+            const response = await attachmentEndpointApi.getCategories();
+            return response.data;
+        } catch (error) {
+            console.error('Error in AttachmentService.getCategories:', error);
+            throw error;
+        }
+    }
+
+    async getCountries() {
+        try {
+            const response = await attachmentEndpointApi.getCountries();
+            return response.data;
+        } catch (error) {
+            console.error('Error in AttachmentService.getCountries:', error);
+            throw error;
+        }
+    }
+
+
 }
