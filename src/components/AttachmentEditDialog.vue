@@ -10,7 +10,6 @@
         </v-btn>
       </v-toolbar>
 
-      <!-- Loading State -->
       <v-card-text v-if="loading" class="pt-6">
         <div class="d-flex flex-column justify-center align-center">
           <v-progress-circular indeterminate color="primary" size="50" width="5" class="mb-4"></v-progress-circular>
@@ -18,7 +17,6 @@
         </div>
       </v-card-text>
 
-      <!-- Error State -->
       <v-card-text v-else-if="error" class="pt-6">
         <v-alert type="error" class="mb-0" variant="tonal">
           <div class="d-flex align-center">
@@ -28,13 +26,11 @@
         </v-alert>
       </v-card-text>
 
-      <!-- Edit Form -->
       <div v-else>
         <v-form ref="form" @submit.prevent="saveAttachment">
           <v-card-text class="pt-4">
             <v-container>
               <v-row>
-                <!-- Left Column: File Information -->
                 <v-col cols="12" md="6">
                   <v-card variant="outlined" class="mb-4">
                     <v-card-item>
@@ -108,7 +104,6 @@
                   </v-card>
                 </v-col>
 
-                <!-- Right Column: Association Information -->
                 <v-col cols="12" md="6">
                   <v-card variant="outlined" class="mb-4">
                     <v-card-item>
@@ -210,6 +205,7 @@
                       ></v-select>
 
                       <v-file-input
+                          v-model="selectedFile"
                           label="Replace File (Optional)"
                           variant="outlined"
                           density="comfortable"
@@ -228,7 +224,6 @@
 
           <v-divider></v-divider>
 
-          <!-- Action Buttons -->
           <v-card-actions class="px-6 py-3">
             <v-spacer></v-spacer>
             <v-btn
@@ -259,6 +254,7 @@
 <script setup>
 import { ref, computed, watch, toRefs, onMounted } from 'vue';
 import { AttachmentService } from '@/services/attachmentService.js';
+import { processFileForUpload, getMimeType } from '@/utilities/fileUtils.js';
 
 const props = defineProps({
   modelValue: {
@@ -291,7 +287,14 @@ const countryOptions = ref([]);
 const languages = ref([]);
 const categoryData = ref([]);
 const filteredCategories = ref([]);
-const displayLanguageName = ref(''); // This will hold the formatted language name for display
+const displayLanguageName = ref('');
+
+
+const selectedFile = ref(null);
+
+
+const originalContent = ref(null);
+const originalMd5 = ref(null);
 
 const formData = ref({
   id: '',
@@ -305,12 +308,13 @@ const formData = ref({
   productId: null,
   categories: [],
   countries: [],
-  status: 'Active'
+  status: 'Active',
+  size: 0
 });
 
 const statusOptions = ['Active', 'Inactive', 'Pending'];
 
-// Computed property to provide hint for filtered categories
+
 const filteredCategoriesHint = computed(() => {
   if (filteredCategories.value.length === 0 && formData.value.languageCode) {
     return `No categories available for language: ${formData.value.languageCode}`;
@@ -318,7 +322,7 @@ const filteredCategoriesHint = computed(() => {
   return '';
 });
 
-// Process countries data for the dropdown and display
+
 const processCountryData = (countriesData) => {
   if (!countriesData || !countriesData.$values) {
     return [];
@@ -331,7 +335,7 @@ const processCountryData = (countriesData) => {
   }));
 };
 
-// Process the language data from the API
+
 const processLanguageData = (languageData) => {
   if (!languageData || !languageData.$values) {
     return [];
@@ -344,17 +348,16 @@ const processLanguageData = (languageData) => {
   }));
 };
 
-// Process categories data properly to handle the new structure
+
 const processCategoryData = (categoriesData) => {
   if (!categoriesData || !categoriesData.$values) {
     return [];
   }
 
-  // Map the complex category structure to a simplified format with translations
   return categoriesData.$values.map(category => {
     const translationMap = {};
 
-    // Process translations using the new structure
+
     if (category.translations && category.translations.$values) {
       category.translations.$values.forEach(translation => {
         translationMap[translation.languageCode] = {
@@ -367,7 +370,6 @@ const processCategoryData = (categoriesData) => {
 
     return {
       id: category.id,
-      // Use English as fallback, or first translation, or generic name
       name: translationMap.EN?.name ||
           (Object.values(translationMap)[0]?.name) ||
           'Unnamed Category',
@@ -376,7 +378,6 @@ const processCategoryData = (categoriesData) => {
   });
 };
 
-// Update language display name
 const updateLanguageDisplay = () => {
   if (!formData.value.languageCode || languages.value.length === 0) return;
 
@@ -388,13 +389,13 @@ const updateLanguageDisplay = () => {
   }
 };
 
-// Fetch languages data
+
 const fetchLanguages = async () => {
   try {
     loadingLanguages.value = true;
     const data = await attachmentService.getLanguages();
     languages.value = processLanguageData(data);
-    // Update language display name after loading languages
+
     updateLanguageDisplay();
     return data;
   } catch (error) {
@@ -405,25 +406,24 @@ const fetchLanguages = async () => {
   }
 };
 
-// Filter categories by the current language code
+
 const filterCategoriesByLanguage = (languageCode) => {
   if (!categoryData.value.length || !languageCode) {
     filteredCategories.value = [];
     return;
   }
 
-  // Filter categories that have a translation for the current language
   const filtered = categoryData.value.filter(category =>
       category.translations && category.translations[languageCode]
   );
 
-  // Map filtered categories to format expected by v-select
+
   filteredCategories.value = filtered.map(category => ({
     id: category.id,
     name: category.translations[languageCode].name
   }));
 
-  // Update selected categories to ensure they're valid for the current language
+
   if (formData.value.categories && formData.value.categories.length > 0) {
     const validCategoryIds = new Set(filteredCategories.value.map(c => c.id));
     formData.value.categories = formData.value.categories.filter(catId => {
@@ -433,19 +433,18 @@ const filterCategoriesByLanguage = (languageCode) => {
   }
 };
 
-// Process the selected countries in attachment data
+
 const processSelectedCountries = (selectedCountries) => {
   if (!selectedCountries || !selectedCountries.length) {
     return [];
   }
 
-  // If the countries are already objects with id property, return them
+
   if (typeof selectedCountries[0] === 'object' && selectedCountries[0].id) {
     return selectedCountries;
   }
 
-  // If the selected countries are just strings (country names or ids)
-  // Find the corresponding country objects from the countryOptions
+
   return selectedCountries.map(countryName => {
     const foundCountry = countryOptions.value.find(
         c => c.name === countryName || c.id === countryName
@@ -454,7 +453,7 @@ const processSelectedCountries = (selectedCountries) => {
   });
 };
 
-// Fetch countries data
+
 const fetchCountries = async () => {
   try {
     loadingCountries.value = true;
@@ -469,14 +468,14 @@ const fetchCountries = async () => {
   }
 };
 
-// Fetch categories data
+
 const fetchCategories = async () => {
   try {
     loadingCategories.value = true;
     const data = await attachmentService.getCategories();
     categoryData.value = processCategoryData(data);
 
-    // Initially filter by the current language
+
     if (formData.value.languageCode) {
       filterCategoriesByLanguage(formData.value.languageCode);
     }
@@ -490,9 +489,33 @@ const fetchCategories = async () => {
   }
 };
 
+
+const fetchAttachmentDetails = async (id) => {
+  try {
+    loading.value = true;
+    const data = await attachmentService.getAttachement(id);
+
+
+    if (data) {
+      originalContent.value = data.content;
+      originalMd5.value = data.md5;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching attachment details:', error);
+    return null;
+  } finally {
+    loading.value = false;
+  }
+};
+
 // Watch for changes to the attachment prop and update form data
-watch(attachment, (newAttachment) => {
+watch(attachment, async (newAttachment) => {
   if (newAttachment?.id) {
+
+    const fullAttachment = await fetchAttachmentDetails(newAttachment.id);
+
     formData.value = {
       id: newAttachment.id || '',
       name: newAttachment.name || '',
@@ -505,29 +528,29 @@ watch(attachment, (newAttachment) => {
       productId: newAttachment.products?.$values?.[0] || null,
       countries: newAttachment.countryNames?.$values || [],
       categories: newAttachment.categoryNames?.$values || [],
-      status: 'Active' // Assuming status is derived from expiryDate and not stored
+      status: 'Active', // Assuming status is derived from expiryDate and not stored
+      size: newAttachment.size || 0
     };
 
-    // Update the language display name
+
     updateLanguageDisplay();
 
-    // After setting form data, filter categories by the current language
+
     if (newAttachment.languageCode && categoryData.value.length > 0) {
       filterCategoriesByLanguage(newAttachment.languageCode);
     }
 
-    // Ensure countries are correctly mapped after countryOptions are loaded
+
     if (countryOptions.value.length > 0 && formData.value.countries.length > 0) {
       formData.value.countries = processSelectedCountries(formData.value.countries);
     }
   }
 }, { immediate: true });
 
-// Watch for languages data to update the language display
+
 watch(languages, () => {
   updateLanguageDisplay();
 });
-
 
 watch(categoryData, (newCategoryData) => {
   if (newCategoryData.length > 0 && formData.value.languageCode) {
@@ -541,32 +564,87 @@ watch(countryOptions, (newCountryOptions) => {
   }
 });
 
+
 const saveAttachment = async () => {
   try {
     saving.value = true;
     error.value = null;
 
-    // Prepare data for API
-    const attachmentData = {
-      ...formData.value,
-      // Convert country objects/ids back to the format expected by the API
-      countries: Array.isArray(formData.value.countries)
-          ? formData.value.countries.map(country =>
-              typeof country === 'object' ? country.id : country
-          )
+
+    let attachmentData = {
+      id: formData.value.id,
+      name: formData.value.name,
+      languageCode: formData.value.languageCode,
+      published: formData.value.published,
+      index: formData.value.index,
+      noResize: formData.value.noResize,
+      size: formData.value.size,
+      expiryDate: formData.value.expiryDate,
+
+
+      content: originalContent.value,
+      md5: originalMd5.value,
+
+
+      countryNames: Array.isArray(formData.value.countries)
+          ? formData.value.countries.map(country => {
+            if (typeof country === 'object') {
+              return country.name;
+            } else {
+
+              const countryObj = countryOptions.value.find(c => c.id === country);
+              return countryObj ? countryObj.name : country;
+            }
+          })
           : [],
-      // Make sure categories are in the expected format
-      categories: Array.isArray(formData.value.categories)
-          ? formData.value.categories.map(category =>
-              typeof category === 'object' ? category.id : category
-          )
+
+
+      categoryNames: Array.isArray(formData.value.categories)
+          ? formData.value.categories.map(category => {
+            if (typeof category === 'object') {
+              return category.name;
+            } else {
+
+              const categoryObj = filteredCategories.value.find(c => c.id === category);
+              return categoryObj ? categoryObj.name : category;
+            }
+          })
+          : [],
+
+
+      products: formData.value.productId
+          ? [{
+            id: typeof formData.value.productId === 'object'
+                ? formData.value.productId.id
+                : formData.value.productId,
+            name: formData.value.productName
+          }]
           : []
     };
 
+
+    if (selectedFile.value) {
+      try {
+
+        const fileData = await processFileForUpload(selectedFile.value);
+
+
+        attachmentData.content = fileData.base64;
+        attachmentData.md5 = fileData.md5;
+        attachmentData.size = fileData.size;
+      } catch (fileError) {
+        console.error('Error processing file:', fileError);
+        error.value = `Failed to process file: ${fileError.message}`;
+        saving.value = false;
+        return;
+      }
+    }
+
     console.log('Saving attachment data:', attachmentData);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    await attachmentService.updateAttachment(attachmentData);
+
 
     emit('updated');
     closeDialog();
@@ -585,16 +663,13 @@ const closeDialog = () => {
 onMounted(async () => {
   loading.value = true;
   try {
-
     const [categoriesPromise, countriesPromise, languagesPromise] = [
       fetchCategories(),
       fetchCountries(),
       fetchLanguages()
     ];
 
-
     await Promise.all([categoriesPromise, countriesPromise, languagesPromise]);
-
 
     if (formData.value.languageCode && categoryData.value.length > 0) {
       filterCategoriesByLanguage(formData.value.languageCode);
@@ -633,12 +708,12 @@ onMounted(async () => {
   padding-top: 16px !important;
 }
 
-/* Reduce the space between form elements */
+
 .v-input--density-comfortable {
   margin-bottom: 12px !important;
 }
 
-/* Add spacer between input groups */
+
 .form-spacer {
   height: 16px;
 }
