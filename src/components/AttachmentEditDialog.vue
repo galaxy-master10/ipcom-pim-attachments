@@ -105,17 +105,10 @@
                     label="Product Name"
                     variant="outlined"
                     density="comfortable"
+                    disabled
+                    hint="Product name cannot be modified"
+                    persistent-hint
                 ></v-text-field>
-                <v-select
-                    v-model="formData.productId"
-                    :items="productOptions"
-                    label="Product"
-                    variant="outlined"
-                    density="comfortable"
-                    item-title="name"
-                    item-value="id"
-                    return-object
-                ></v-select>
 
                 <v-select
                     v-model="formData.categories"
@@ -261,11 +254,6 @@ const formData = ref({
   status: 'Active'
 });
 
-const productOptions = ref([
-  { id: '0562a3f8-92a8-414d-be0a-58827f9a7f4c', name: 'Armaflex Ultima tubes' },
-  { id: '1', name: 'ORYX COLLAR WR' },
-  { id: '2', name: 'Product 3' }
-]);
 const statusOptions = ['Active', 'Inactive', 'Pending'];
 
 // Computed property to provide hint for filtered categories
@@ -449,6 +437,7 @@ watch(attachment, (newAttachment) => {
       id: newAttachment.id || '',
       name: newAttachment.name || '',
       languageCode: newAttachment.languageCode || '',
+      productName: newAttachment.products?.$values?.[0].name || null,
       published: newAttachment.published || false,
       noResize: newAttachment.noResize || false,
       index: newAttachment.index || 0,
