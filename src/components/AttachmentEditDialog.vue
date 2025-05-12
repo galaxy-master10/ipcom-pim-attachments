@@ -1,205 +1,257 @@
 <template>
   <v-dialog v-model="dialog" max-width="900px" persistent>
+    <!-- Header Bar -->
     <v-card>
-      <v-card-title class="bg-primary text-white">
-        Edit Attachment
+      <v-toolbar color="primary" dark flat>
+        <v-toolbar-title>Edit Attachment</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-btn icon variant="text" @click="closeDialog">
-          <v-icon color="white">mdi-close</v-icon>
+        <v-btn icon @click="closeDialog">
+          <v-icon>mdi-close</v-icon>
         </v-btn>
-      </v-card-title>
+      </v-toolbar>
 
-      <v-card-text>
-        <v-container v-if="loading">
-          <div class="d-flex justify-center align-center pa-4">
-            <v-progress-circular indeterminate color="primary"></v-progress-circular>
-            <span class="ml-2">Loading...</span>
-          </div>
-        </v-container>
-
-        <v-container v-else-if="error">
-          <v-alert type="error" class="mb-0">{{ error }}</v-alert>
-        </v-container>
-
-        <v-form v-else ref="form" @submit.prevent="saveAttachment">
-          <v-container>
-            <v-row>
-              <!-- Left Column -->
-              <v-col cols="12" md="6">
-                <div class="text-h6 mb-4">File Information</div>
-
-                <v-text-field
-                    v-model="formData.name"
-                    label="Name"
-                    variant="outlined"
-                    density="comfortable"
-                ></v-text-field>
-
-                <v-text-field
-                    v-model="formData.id"
-                    label="ID"
-                    variant="outlined"
-                    density="comfortable"
-                    disabled
-                    hint="ID cannot be modified"
-                    persistent-hint
-                ></v-text-field>
-
-                <v-select
-                    v-model="formData.languageCode"
-                    :items="languages"
-                    label="Language"
-                    variant="outlined"
-                    density="comfortable"
-                    item-title="name"
-                    item-value="isoCode"
-                    :loading="loadingLanguages"
-                    :disabled="loadingLanguages"
-                    @update:model-value="handleLanguageChange"
-                >
-                  <template v-slot:selection="{ item }">
-                    <span>{{ item.raw.name }} ({{ item.raw.isoCode }})</span>
-                  </template>
-                  <template v-slot:item="{ item, props }">
-                    <v-list-item v-bind="props">
-                      <template v-slot:prepend>
-                        <span class="language-code">{{ item.raw.isoCode }}</span>
-                      </template>
-                      <v-list-item-title>{{ item.raw.name }}</v-list-item-title>
-                    </v-list-item>
-                  </template>
-                </v-select>
-
-                <v-checkbox
-                    v-model="formData.published"
-                    label="Published"
-                ></v-checkbox>
-
-                <v-checkbox
-                    v-model="formData.noResize"
-                    label="No Resize"
-                ></v-checkbox>
-
-                <v-text-field
-                    v-model.number="formData.index"
-                    type="number"
-                    label="Index"
-                    variant="outlined"
-                    density="comfortable"
-                ></v-text-field>
-              </v-col>
-
-              <!-- Right Column -->
-              <v-col cols="12" md="6">
-                <div class="text-h6 mb-4">Association Information</div>
-
-                <v-text-field
-                    v-model="formData.expiryDate"
-                    label="Expiry Date"
-                    variant="outlined"
-                    density="comfortable"
-                    type="date"
-                ></v-text-field>
-                <v-text-field
-                    v-model="formData.productName"
-                    label="Product Name"
-                    variant="outlined"
-                    density="comfortable"
-                    disabled
-                    hint="Product name cannot be modified"
-                    persistent-hint
-                ></v-text-field>
-
-                <v-select
-                    v-model="formData.categories"
-                    :items="filteredCategories"
-                    label="Categories"
-                    variant="outlined"
-                    density="comfortable"
-                    multiple
-                    chips
-                    item-title="name"
-                    item-value="id"
-                    :loading="loadingCategories"
-                    :disabled="loadingCategories"
-                    :hint="loadingCategories ? 'Loading categories...' : filteredCategoriesHint"
-                    persistent-hint
-                >
-                  <template v-slot:selection="{ item }">
-                    <v-chip>
-                      <span>{{ item.raw.name }}</span>
-                    </v-chip>
-                  </template>
-                </v-select>
-
-                <v-select
-                    v-model="formData.countries"
-                    :items="countryOptions"
-                    label="Countries"
-                    variant="outlined"
-                    density="comfortable"
-                    multiple
-                    chips
-                    item-title="name"
-                    item-value="id"
-                    :loading="loadingCountries"
-                    :disabled="loadingCountries"
-                    :hint="loadingCountries ? 'Loading countries...' : ''"
-                    persistent-hint
-                >
-                  <template v-slot:selection="{ item }">
-                    <v-chip>
-                      <span>{{ item.raw.name }} ({{ item.raw.countryCode }})</span>
-                    </v-chip>
-                  </template>
-                  <template v-slot:item="{ item, props }">
-                    <v-list-item v-bind="props">
-                      <template v-slot:prepend>
-                        <span class="country-code">{{ item.raw.countryCode }}</span>
-                      </template>
-                      <v-list-item-title>{{ item.raw.name }}</v-list-item-title>
-                    </v-list-item>
-                  </template>
-                </v-select>
-
-                <v-select
-                    v-model="formData.status"
-                    :items="statusOptions"
-                    label="Status"
-                    variant="outlined"
-                    density="comfortable"
-                ></v-select>
-
-                <v-file-input
-                    label="Replace File (Optional)"
-                    variant="outlined"
-                    density="comfortable"
-                    prepend-icon="mdi-paperclip"
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
-                ></v-file-input>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-form>
+      <!-- Loading State -->
+      <v-card-text v-if="loading" class="pt-6">
+        <div class="d-flex flex-column justify-center align-center">
+          <v-progress-circular indeterminate color="primary" size="50" width="5" class="mb-4"></v-progress-circular>
+          <span class="text-body-1">Loading attachment data...</span>
+        </div>
       </v-card-text>
 
-      <v-divider></v-divider>
+      <!-- Error State -->
+      <v-card-text v-else-if="error" class="pt-6">
+        <v-alert type="error" class="mb-0" variant="tonal">
+          <div class="d-flex align-center">
+            <v-icon size="large" class="mr-3">mdi-alert-circle</v-icon>
+            <span>{{ error }}</span>
+          </div>
+        </v-alert>
+      </v-card-text>
 
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn color="grey-darken-1" variant="text" @click="closeDialog">
-          Cancel
-        </v-btn>
-        <v-btn
-            color="primary"
-            variant="text"
-            @click="saveAttachment"
-            :loading="saving"
-            :disabled="saving"
-        >
-          Save
-        </v-btn>
-      </v-card-actions>
+      <!-- Edit Form -->
+      <div v-else>
+        <v-form ref="form" @submit.prevent="saveAttachment">
+          <v-card-text class="pt-4">
+            <v-container>
+              <v-row>
+                <!-- Left Column: File Information -->
+                <v-col cols="12" md="6">
+                  <v-card variant="outlined" class="mb-4">
+                    <v-card-item>
+                      <template v-slot:prepend>
+                        <v-icon color="primary" size="large">mdi-file-document-outline</v-icon>
+                      </template>
+                      <v-card-title class="text-h6">File Information</v-card-title>
+                    </v-card-item>
+
+                    <v-divider></v-divider>
+
+                    <v-card-text>
+                      <v-text-field
+                          v-model="formData.name"
+                          label="File Name"
+                          variant="outlined"
+                          density="comfortable"
+                          prepend-inner-icon="mdi-file"
+                          class="mb-3"
+                      ></v-text-field>
+
+                      <v-text-field
+                          v-model="formData.id"
+                          label="ID"
+                          variant="outlined"
+                          density="comfortable"
+                          prepend-inner-icon="mdi-identifier"
+                          disabled
+                          hint="ID cannot be modified"
+                          persistent-hint
+                          class="mb-3"
+                      ></v-text-field>
+
+                      <v-text-field
+                          v-model="displayLanguageName"
+                          label="Language"
+                          variant="outlined"
+                          density="comfortable"
+                          prepend-inner-icon="mdi-translate"
+                          disabled
+                          hint="Language cannot be modified"
+                          persistent-hint
+                          class="mb-3"
+                      ></v-text-field>
+
+                      <v-text-field
+                          v-model.number="formData.index"
+                          type="number"
+                          label="Index"
+                          variant="outlined"
+                          density="comfortable"
+                          prepend-inner-icon="mdi-order-numeric-ascending"
+                          class="mb-4"
+                      ></v-text-field>
+
+                      <div class="d-flex flex-wrap gap-3">
+                        <v-checkbox
+                            v-model="formData.published"
+                            label="Published"
+                            color="success"
+                            class="mr-4"
+                        ></v-checkbox>
+
+                        <v-checkbox
+                            v-model="formData.noResize"
+                            label="No Resize"
+                            color="primary"
+                        ></v-checkbox>
+                      </div>
+                    </v-card-text>
+                  </v-card>
+                </v-col>
+
+                <!-- Right Column: Association Information -->
+                <v-col cols="12" md="6">
+                  <v-card variant="outlined" class="mb-4">
+                    <v-card-item>
+                      <template v-slot:prepend>
+                        <v-icon color="primary" size="large">mdi-link-variant</v-icon>
+                      </template>
+                      <v-card-title class="text-h6">Association Information</v-card-title>
+                    </v-card-item>
+
+                    <v-divider></v-divider>
+
+                    <v-card-text>
+                      <v-text-field
+                          v-model="formData.expiryDate"
+                          label="Expiry Date"
+                          variant="outlined"
+                          density="comfortable"
+                          prepend-inner-icon="mdi-calendar"
+                          type="date"
+                          class="mb-3"
+                      ></v-text-field>
+
+                      <v-text-field
+                          v-model="formData.productName"
+                          label="Product Name"
+                          variant="outlined"
+                          density="comfortable"
+                          prepend-inner-icon="mdi-package-variant-closed"
+                          disabled
+                          hint="Product name cannot be modified"
+                          persistent-hint
+                          class="mb-3"
+                      ></v-text-field>
+
+                      <v-select
+                          v-model="formData.categories"
+                          :items="filteredCategories"
+                          label="Categories"
+                          variant="outlined"
+                          density="comfortable"
+                          prepend-inner-icon="mdi-tag-multiple"
+                          multiple
+                          chips
+                          item-title="name"
+                          item-value="id"
+                          :loading="loadingCategories"
+                          :disabled="loadingCategories"
+                          :hint="loadingCategories ? 'Loading categories...' : filteredCategoriesHint"
+                          persistent-hint
+                          class="mb-3"
+                      >
+                        <template v-slot:selection="{ item }">
+                          <v-chip color="primary" variant="tonal" size="small">
+                            {{ item.raw.name }}
+                          </v-chip>
+                        </template>
+                      </v-select>
+
+                      <v-select
+                          v-model="formData.countries"
+                          :items="countryOptions"
+                          label="Countries"
+                          variant="outlined"
+                          density="comfortable"
+                          prepend-inner-icon="mdi-earth"
+                          multiple
+                          chips
+                          item-title="name"
+                          item-value="id"
+                          :loading="loadingCountries"
+                          :disabled="loadingCountries"
+                          :hint="loadingCountries ? 'Loading countries...' : ''"
+                          persistent-hint
+                          class="mb-3"
+                      >
+                        <template v-slot:selection="{ item }">
+                          <v-chip color="info" variant="tonal" size="small">
+                            {{ item.raw.name }} ({{ item.raw.countryCode }})
+                          </v-chip>
+                        </template>
+                        <template v-slot:item="{ item, props }">
+                          <v-list-item v-bind="props">
+                            <template v-slot:prepend>
+                              <span class="country-code">{{ item.raw.countryCode }}</span>
+                            </template>
+                            <v-list-item-title>{{ item.raw.name }}</v-list-item-title>
+                          </v-list-item>
+                        </template>
+                      </v-select>
+
+                      <v-select
+                          v-model="formData.status"
+                          :items="statusOptions"
+                          label="Status"
+                          variant="outlined"
+                          density="comfortable"
+                          prepend-inner-icon="mdi-check-circle"
+                          class="mb-3"
+                      ></v-select>
+
+                      <v-file-input
+                          label="Replace File (Optional)"
+                          variant="outlined"
+                          density="comfortable"
+                          prepend-icon="mdi-paperclip"
+                          accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
+                          show-size
+                          truncate-length="25"
+                          class="mt-4"
+                      ></v-file-input>
+                    </v-card-text>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </v-container>
+          </v-card-text>
+
+          <v-divider></v-divider>
+
+          <!-- Action Buttons -->
+          <v-card-actions class="px-6 py-3">
+            <v-spacer></v-spacer>
+            <v-btn
+                color="grey-darken-1"
+                variant="text"
+                @click="closeDialog"
+                class="px-5"
+            >
+              Cancel
+            </v-btn>
+            <v-btn
+                color="primary"
+                variant="elevated"
+                @click="saveAttachment"
+                :loading="saving"
+                :disabled="saving"
+                class="px-5 ml-2"
+            >
+              Save
+            </v-btn>
+          </v-card-actions>
+        </v-form>
+      </div>
     </v-card>
   </v-dialog>
 </template>
@@ -239,6 +291,8 @@ const countryOptions = ref([]);
 const languages = ref([]);
 const categoryData = ref([]);
 const filteredCategories = ref([]);
+const displayLanguageName = ref(''); // This will hold the formatted language name for display
+
 const formData = ref({
   id: '',
   name: '',
@@ -322,12 +376,26 @@ const processCategoryData = (categoriesData) => {
   });
 };
 
+// Update language display name
+const updateLanguageDisplay = () => {
+  if (!formData.value.languageCode || languages.value.length === 0) return;
+
+  const language = languages.value.find(l => l.isoCode === formData.value.languageCode);
+  if (language) {
+    displayLanguageName.value = `${language.name} (${language.isoCode})`;
+  } else {
+    displayLanguageName.value = formData.value.languageCode;
+  }
+};
+
 // Fetch languages data
 const fetchLanguages = async () => {
   try {
     loadingLanguages.value = true;
     const data = await attachmentService.getLanguages();
     languages.value = processLanguageData(data);
+    // Update language display name after loading languages
+    updateLanguageDisplay();
     return data;
   } catch (error) {
     console.error('Error fetching languages:', error);
@@ -363,12 +431,6 @@ const filterCategoriesByLanguage = (languageCode) => {
       return validCategoryIds.has(categoryId);
     });
   }
-};
-
-// Handle language change
-const handleLanguageChange = (newLanguage) => {
-  console.log("Language changed to:", newLanguage);
-  filterCategoriesByLanguage(newLanguage);
 };
 
 // Process the selected countries in attachment data
@@ -412,9 +474,7 @@ const fetchCategories = async () => {
   try {
     loadingCategories.value = true;
     const data = await attachmentService.getCategories();
-    console.log("Raw category data:", data);
     categoryData.value = processCategoryData(data);
-    console.log("Processed category data:", categoryData.value);
 
     // Initially filter by the current language
     if (formData.value.languageCode) {
@@ -437,7 +497,7 @@ watch(attachment, (newAttachment) => {
       id: newAttachment.id || '',
       name: newAttachment.name || '',
       languageCode: newAttachment.languageCode || '',
-      productName: newAttachment.products?.$values?.[0].name || null,
+      productName: newAttachment.products?.$values?.[0]?.name || '',
       published: newAttachment.published || false,
       noResize: newAttachment.noResize || false,
       index: newAttachment.index || 0,
@@ -447,6 +507,9 @@ watch(attachment, (newAttachment) => {
       categories: newAttachment.categoryNames?.$values || [],
       status: 'Active' // Assuming status is derived from expiryDate and not stored
     };
+
+    // Update the language display name
+    updateLanguageDisplay();
 
     // After setting form data, filter categories by the current language
     if (newAttachment.languageCode && categoryData.value.length > 0) {
@@ -460,14 +523,18 @@ watch(attachment, (newAttachment) => {
   }
 }, { immediate: true });
 
-// After categoryData is loaded, filter categories by the current language
+// Watch for languages data to update the language display
+watch(languages, () => {
+  updateLanguageDisplay();
+});
+
+
 watch(categoryData, (newCategoryData) => {
   if (newCategoryData.length > 0 && formData.value.languageCode) {
     filterCategoriesByLanguage(formData.value.languageCode);
   }
 });
 
-// After countryOptions are loaded, update the selectedCountries if needed
 watch(countryOptions, (newCountryOptions) => {
   if (newCountryOptions.length > 0 && formData.value.countries.length > 0) {
     formData.value.countries = processSelectedCountries(formData.value.countries);
@@ -518,22 +585,21 @@ const closeDialog = () => {
 onMounted(async () => {
   loading.value = true;
   try {
-    // Fetch data in parallel for better performance
+
     const [categoriesPromise, countriesPromise, languagesPromise] = [
       fetchCategories(),
       fetchCountries(),
       fetchLanguages()
     ];
 
-    // Wait for all data to be loaded
+
     await Promise.all([categoriesPromise, countriesPromise, languagesPromise]);
 
-    // If the attachment data is already available, filter categories by language
+
     if (formData.value.languageCode && categoryData.value.length > 0) {
       filterCategoriesByLanguage(formData.value.languageCode);
     }
 
-    // If the attachment data is already available, update the countries selection
     if (formData.value.countries.length > 0 && countryOptions.value.length > 0) {
       formData.value.countries = processSelectedCountries(formData.value.countries);
     }
@@ -547,15 +613,33 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.country-code, .language-code {
+.country-code {
   display: inline-block;
   min-width: 36px;
   padding: 2px 6px;
-  background-color: #f0f0f0;
+  background-color: #e0e0e0;
   border-radius: 4px;
   font-size: 0.8rem;
   font-weight: bold;
   text-align: center;
   margin-right: 8px;
+}
+
+.v-card-item {
+  padding-bottom: 8px !important;
+}
+
+.v-card-text {
+  padding-top: 16px !important;
+}
+
+/* Reduce the space between form elements */
+.v-input--density-comfortable {
+  margin-bottom: 12px !important;
+}
+
+/* Add spacer between input groups */
+.form-spacer {
+  height: 16px;
 }
 </style>
