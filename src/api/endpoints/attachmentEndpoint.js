@@ -38,7 +38,6 @@ export const attachmentEndpointApi = {
 
     getCategories: () => apiClient.get('/attachments/categories'),
 
-    // get countries
     getCountries: () => apiClient.get('/attachments/countries'),
 
     getLanguages: () => apiClient.get('/attachments/languages'),

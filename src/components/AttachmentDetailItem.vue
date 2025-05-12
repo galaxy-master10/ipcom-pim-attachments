@@ -25,14 +25,14 @@
           v-for="(item, index) in Array.isArray(value) ? value : [value]"
           :key="index"
           size="small"
-          color="grey-lighten-3"
+          color="green-lighten-8"
       >
         {{ item }}
       </v-chip>
     </div>
 
     <div v-else-if="chip" class="mt-1">
-      <v-chip size="small" color="grey-lighten-3">
+      <v-chip size="small" color="red">
         {{ value }}
       </v-chip>
     </div>

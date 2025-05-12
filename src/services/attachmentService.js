@@ -16,7 +16,6 @@ export class AttachmentService {
                 formattedFilters.expiryDateTo = new Date(formattedFilters.expiryDateTo).toISOString().split('T')[0];
             }
 
-            // Clean up the filters object by removing empty values
             const cleanFilters = {};
             Object.keys(formattedFilters).forEach(key => {
                 const value = formattedFilters[key];

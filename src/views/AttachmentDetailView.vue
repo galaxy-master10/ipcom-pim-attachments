@@ -253,7 +253,8 @@ const getCategoryNames = () => {
 };
 
 const getStatus = (expiryDate) => {
-  return getStatusAndLevel(expiryDate);
+  const data = getStatusAndLevel(expiryDate);
+  return data
 };
 
 const getExpiryDateHighlight = (expiryDate) => {
