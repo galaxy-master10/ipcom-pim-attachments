@@ -4,10 +4,12 @@ const msalConfig = {
         clientId: 'ce5425aa-2c4a-4ac4-a986-273c2a222168',
         authority: 'https://login.microsoftonline.com/5ee80607-15dc-49f6-ac6c-9f79d2bc312f',
         redirectUri: window.location.origin,
+
+        navigateToLoginRequestUrl: true,
     },
     cache: {
-        cacheLocation: 'localStorage',
-        storeAuthStateInCookie: true // Enable cookies for better compatibility
+        cacheLocation: 'sessionStorage',
+        storeAuthStateInCookie: false // Enable cookies for better compatibility
     },
     system: {
         loggerOptions: {
@@ -23,7 +25,6 @@ const msalConfig = {
 
 export const loginRequest = {
     scopes: ["api://ce5425aa-2c4a-4ac4-a986-273c2a222168/Pim"],
-    //api://ce5425aa-2c4a-4ac4-a986-273c2a222168/PricingApi
-    // //api://ce5425aa-2c4a-4ac4-a986-273c2a222168/Pim
+
 };
 export default msalConfig;

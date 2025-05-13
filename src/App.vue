@@ -79,7 +79,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import {ref, computed, onMounted, watch, onUnmounted} from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useNotificationStore } from './stores/notificationStore';
 import AuthService from "@/auth/authService.js";
@@ -107,7 +107,7 @@ watch(
 
 const currentDate = computed(() => {
   const date = new Date();
-  return date.toLocaleDateString('nl-NL', {
+  return date.toLocaleDateString('en-NL', {
     day: 'numeric',
     month: 'long',
     year: 'numeric'
@@ -163,11 +163,24 @@ const handleLogout = async () => {
   }
 }
 
+const handleSessionExpired = () => {
+  isAuthenticated.value = false;
+  authError.value = "Your session has expired. Please log in again.";
+
+};
+
+
 
 onMounted(async () => {
 
   await checkAuthentication();
+  window.addEventListener('auth:session-expired', handleSessionExpired);
 })
+
+onUnmounted(() => {
+  window.removeEventListener('auth:session-expired', handleSessionExpired);
+});
+
 </script>
 
 <style scoped>
