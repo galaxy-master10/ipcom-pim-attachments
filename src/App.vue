@@ -3,7 +3,7 @@
     <v-layout>
 
       <v-app-bar color="primary" dark elevation="2">
-        <v-app-bar-title>IPCOM Attachment Expiry System</v-app-bar-title>
+        <v-app-bar-title>IPCOM PIM SYSTEM</v-app-bar-title>
 
         <v-spacer></v-spacer>
 
